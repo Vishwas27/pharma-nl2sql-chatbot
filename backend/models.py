@@ -50,5 +50,6 @@ class ChatResponse(BaseModel):
     chart: Optional[ChartConfig] = None
     suggestions: List[str] = Field(default_factory=list)
     rag_sources: List[Dict[str, Any]] = Field(default_factory=list, description="Retrieved RAG domain knowledge chunks")
+    traces: List[Dict[str, Any]] = Field(default_factory=list, description="Multi-Agent runtime execution trace")
     security_notice: Optional[str] = None
     error: Optional[str] = None

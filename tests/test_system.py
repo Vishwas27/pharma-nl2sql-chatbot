@@ -252,6 +252,33 @@ class TestNovaPharmaSystem(unittest.TestCase):
             for row in resp.data.rows:
                 self.assertNotEqual(row.get("territory_name"), "Texas")
 
+    def test_16_multi_agent_harness_execution_trace(self):
+        req = ChatRequest(
+            user_id="U001",
+            message="What are our top 3 products by volume this quarter?"
+        )
+        resp = handle_chat_query(req)
+        self.assertTrue(resp.success)
+        self.assertIsInstance(resp.traces, list)
+        self.assertGreaterEqual(len(resp.traces), 4)
+
+        agent_names = [t["agent"] for t in resp.traces]
+        self.assertIn("SupervisorAgent", agent_names)
+        self.assertIn("SQLArchitectAgent", agent_names)
+        self.assertIn("SecurityGuardrailAgent", agent_names)
+        self.assertIn("DatabaseEngine", agent_names)
+        self.assertIn("ExecutiveInsightsAgent", agent_names)
+
+    def test_17_multi_agent_harness_conversational_turn(self):
+        req = ChatRequest(
+            user_id="U001",
+            message="Hello, what can you do?"
+        )
+        resp = handle_chat_query(req)
+        self.assertTrue(resp.success)
+        self.assertIsNone(resp.sql)
+        self.assertGreaterEqual(len(resp.traces), 2)
+
 
 if __name__ == "__main__":
     unittest.main()

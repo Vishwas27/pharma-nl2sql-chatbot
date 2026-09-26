@@ -61,6 +61,41 @@ flowchart TD
 
 ---
 
+## 2.1 Multi-Agent Orchestration & Supervision Harness
+
+NovaPharma Assistant is architected as an **Autonomous Multi-Agent Harness** ([backend/agent_harness.py](file:///c:/Users/karti/Downloads/Projects/AI%20Slop/Pharma_Chatbot/backend/agent_harness.py)) that separates responsibilities across specialized agents with runtime telemetry and self-healing reflexion:
+
+```mermaid
+flowchart TD
+    UserQuery["User Natural Language Query"] --> Supervisor["🎯 Supervisor & Intent Router"]
+    
+    subgraph MultiAgentHarness ["NovaPharma Multi-Agent Harness"]
+        Supervisor -->|Domain Knowledge & RAG Context| SQLAgent["1. 🏛️ SQL Architect Agent\n(Translates NL into precision SQLite)"]
+        SQLAgent -->|Draft SQL| SecAgent["2. 🛡️ Compliance & Security Guardrail Agent\n(AST Validator + RBAC Scope Lock + WAC Scrubber)"]
+        
+        SecAgent -->|Approved Query| ExecLoop["3. ⚡ DB Execution & Reflection Loop"]
+        
+        ExecLoop -->|If SQLite Error| SelfHeal["🔁 Self-Correction Reflexion\n(Sends error back to SQL Agent to fix)"]
+        SelfHeal --> SQLAgent
+        
+        ExecLoop -->|Successful Query Data| InsightAgent["4. 📊 Executive Insights Agent\n(Commercial analysis, KPI commentary, anomalies)"]
+        ExecLoop -->|Data Columns & Shapes| VizAgent["5. 📈 Data Visualizer Agent\n(Chart.js config, trend aggregation)"]
+    end
+    
+    InsightAgent --> Synthesizer["🏁 Final Response Synthesizer"]
+    VizAgent --> Synthesizer
+    Synthesizer --> TraceInspector["🔍 Real-Time Agent Execution Trace\n(Logged in Telemetry Buffer & Interactive UI Accordion)"]
+```
+
+### Specialized Agent Roles:
+1. **Supervisor Agent**: Classifies query intent and dynamically routes context to domain knowledge bases (`metrics`, `products`, `accounts`).
+2. **SQL Architect Agent**: Focuses strictly on high-performance SQLite translation, CTE construction, and offset filtering.
+3. **Security Guardrail Agent**: Independent compliance officer enforcing row-level territory isolation and WAC pricing masking.
+4. **Execution Reflexion Loop**: Captures SQLite runtime exceptions and orchestrates auto-correction retries.
+5. **Executive Insights & Viz Agent**: Translates raw rows into executive summaries and formats visual charts.
+
+---
+
 ## 3. Database Choice and Optimization Rationale
 
 ### Choice: SQLite (with WAL Mode & Covered Indexes)

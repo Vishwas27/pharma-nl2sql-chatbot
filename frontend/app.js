@@ -536,7 +536,35 @@ function appendAssistantResponse(resp) {
         `;
     }
 
-    // 5. Follow-up Suggestions
+    // 5. Multi-Agent Execution Trace (Collapsible)
+    let tracesHtml = "";
+    if (resp.traces && resp.traces.length > 0) {
+        const totalTraceMs = resp.traces.reduce((acc, t) => acc + (t.latency_ms || 0), 0);
+        tracesHtml = `
+            <details class="trace-accordion">
+                <summary>
+                    <div class="trace-summary-left">
+                        <span>🔍 Multi-Agent Execution Trace (${resp.traces.length} steps)</span>
+                    </div>
+                    <span class="trace-latency-badge">${totalTraceMs.toFixed(1)} ms</span>
+                </summary>
+                <div class="trace-timeline">
+                    ${resp.traces.map(t => `
+                        <div class="trace-item status-${t.status}">
+                            <span class="trace-agent-tag">${escapeHtml(t.agent)}</span>
+                            <div class="trace-body">
+                                <span class="trace-action">${escapeHtml(t.action)}</span>
+                                ${t.details ? `<span class="trace-details">${escapeHtml(t.details)}</span>` : ''}
+                            </div>
+                            <span class="trace-ms">${t.latency_ms}ms</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </details>
+        `;
+    }
+
+    // 6. Follow-up Suggestions
     let suggestionsHtml = "";
     if (resp.suggestions && resp.suggestions.length > 0) {
         suggestionsHtml = `
@@ -559,6 +587,7 @@ function appendAssistantResponse(resp) {
                 <p>${formatMarkdownText(resp.explanation)}</p>
                 ${cardsHtml}
                 ${ragSourcesHtml}
+                ${tracesHtml}
                 ${suggestionsHtml}
             </div>
         </div>

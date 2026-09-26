@@ -20,12 +20,14 @@ from backend.llm_engine import LLMEngine
 from backend.domain_knowledge import NOVAPHARMA_PRODUCTS, SCHEMA_DDL, DOMAIN_RULES
 from backend.logger import log_interaction, get_recent_logs, clear_logs
 
+from backend.agent_harness import agent_harness
+
 # Ensure database is initialized
 init_database()
 
 app = FastAPI(
     title="NovaPharma Commercial Analytics Assistant",
-    description="Production-grade NL-to-SQL conversational assistant with domain intelligence and RBAC security.",
+    description="Production-grade NL-to-SQL conversational assistant with domain intelligence, multi-agent harness, and RBAC security.",
     version="1.0.0"
 )
 
@@ -105,8 +107,8 @@ def get_schema_metadata():
 @app.post("/api/chat", response_model=ChatResponse)
 def handle_chat_query(req: ChatRequest):
     """
-    Main Conversational NL-to-SQL endpoint.
-    Processes natural language question, enforces RBAC & WAC security, executes SQL, and returns structured insights.
+    Main Conversational NL-to-SQL endpoint driven by the Multi-Agent Harness.
+    Orchestrates Supervisor, SQL Architect, Security Guardrail, DB Reflexion, and Executive Insights agents.
     """
     user = get_user_by_id_or_email(req.user_id)
     if not user:
@@ -114,17 +116,16 @@ def handle_chat_query(req: ChatRequest):
 
     history_dicts = [{"role": m.role, "content": m.content, "sql": m.sql} for m in (req.conversation_history or [])]
 
-    # Generate response from LLM or deterministic engine
     try:
-        llm_output = llm_engine.generate_response(
+        pipeline_res = agent_harness.run_pipeline(
             user_info=user,
             message=req.message,
             conversation_history=history_dicts,
             provider_override=req.api_provider,
             api_key_override=req.api_key
         )
-    except Exception as llm_exc:
-        err_str = str(llm_exc)
+    except Exception as exc:
+        err_str = str(exc)
         log_interaction(
             user_name=user["full_name"],
             user_role=user["role"],
@@ -147,96 +148,20 @@ def handle_chat_query(req: ChatRequest):
             suggestions=["Configure API Key in Settings"]
         )
 
-    sql_query = llm_output.get("sql")
-    explanation = llm_output.get("explanation", "Here are the results for your request.")
-    chart_type = llm_output.get("chart_type", "none")
-    x_key = llm_output.get("x_key")
-    y_keys = llm_output.get("y_keys")
-    suggestions = llm_output.get("suggestions", [])
-    security_notice = None
-    query_data = None
-    error_msg = None
-
-    if sql_query:
-        # Enforce Multi-Layer Security Guardrails
-        is_valid, sec_error, sanitized_sql = validate_and_sanitize_sql(sql_query, user)
-        if not is_valid:
-            log_interaction(
-                user_name=user["full_name"],
-                user_role=user["role"],
-                question=req.message,
-                provider=req.api_provider or "default",
-                sql=sql_query,
-                error=sec_error
-            )
-            return ChatResponse(
-                success=False,
-                user_id=user["user_id"],
-                user_name=user["full_name"],
-                user_role=user["role"],
-                territory=user["territory_name"],
-                region=user["region_name"],
-                can_view_wac=bool(user["can_view_wac"]),
-                question=req.message,
-                sql=sql_query,
-                explanation=sec_error or "Security policy violation.",
-                security_notice=sec_error,
-                suggestions=["Show volume in pack units instead", "What are my top accounts?"]
-            )
-
-        try:
-            # Execute sanitized query
-            rows, exec_time, cols = execute_query(sanitized_sql)
-            
-            # Post-execution column filtering defense
-            clean_rows = filter_response_data(rows, user)
-            clean_cols = [c for c in cols if "wac" not in c.lower()] if not user["can_view_wac"] else cols
-
-            query_data = QueryResult(
-                columns=clean_cols,
-                rows=clean_rows,
-                row_count=len(clean_rows),
-                execution_time_ms=exec_time
-            )
-
-            # Refine chart hints if not provided
-            if len(clean_rows) == 0:
-                if not explanation or "here are" in explanation.lower() or "top" in explanation.lower():
-                    explanation = "No matching records were found for this specific filter criteria in the database. You may want to broaden your search or adjust the timeframe."
-                if not suggestions:
-                    suggestions = ["Show overall top accounts", "Show all products this quarter", "Check last 6 months trend"]
-            elif chart_type == "none" and len(clean_rows) > 0 and len(clean_cols) >= 2:
-                chart_type = "bar" if len(clean_rows) <= 15 else "table"
-                x_key = clean_cols[0]
-                y_keys = [clean_cols[1]]
-
-        except Exception as query_exc:
-            error_msg = f"Database Query Error: {str(query_exc)}"
-            explanation = f"I encountered an error executing the query: {str(query_exc)}"
-
-    chart_config = ChartConfig(
-        chart_type=chart_type or "none",
-        x_key=x_key,
-        y_keys=y_keys,
-        title=f"Analysis for: {req.message[:50]}..."
-    )
-
-    # Record log
+    q_data = pipeline_res.get("data")
     log_interaction(
         user_name=user["full_name"],
         user_role=user["role"],
         question=req.message,
         provider=req.api_provider or "gemini",
-        sql=sql_query,
-        row_count=query_data.row_count if query_data else 0,
-        execution_time_ms=query_data.execution_time_ms if query_data else 0.0,
-        error=error_msg
+        sql=pipeline_res.get("sql"),
+        row_count=q_data.row_count if q_data else 0,
+        execution_time_ms=q_data.execution_time_ms if q_data else 0.0,
+        error=pipeline_res.get("error")
     )
 
-    rag_sources = llm_output.get("rag_sources", [])
-
     return ChatResponse(
-        success=error_msg is None,
+        success=pipeline_res.get("success", True),
         user_id=user["user_id"],
         user_name=user["full_name"],
         user_role=user["role"],
@@ -244,14 +169,15 @@ def handle_chat_query(req: ChatRequest):
         region=user["region_name"],
         can_view_wac=bool(user["can_view_wac"]),
         question=req.message,
-        sql=sql_query,
-        explanation=explanation,
-        data=query_data,
-        chart=chart_config,
-        suggestions=suggestions,
-        rag_sources=rag_sources,
-        security_notice=security_notice,
-        error=error_msg
+        sql=pipeline_res.get("sql"),
+        explanation=pipeline_res.get("explanation", ""),
+        data=q_data,
+        chart=pipeline_res.get("chart"),
+        suggestions=pipeline_res.get("suggestions", []),
+        rag_sources=pipeline_res.get("rag_sources", []),
+        traces=pipeline_res.get("traces", []),
+        security_notice=pipeline_res.get("security_notice"),
+        error=pipeline_res.get("error")
     )
 
 
