@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaPharma AI | Commercial Analytics Assistant</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Chart.js for data visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="theme-dark">
+
+    <!-- ========================================== -->
+    <!-- 1. LOGIN / PERSONA SELECTION SCREEN       -->
+    <!-- ========================================== -->
+    <div id="login-view" class="login-container">
+        <div class="login-card">
+            <div class="login-brand">
+                <div class="brand-logo login-logo">
+                    <span>✨</span>
+                </div>
+                <h2>NovaPharma AI</h2>
+                <p class="login-subtitle">Commercial Analytics & Decision Support Portal</p>
+            </div>
+
+            <div class="login-section">
+                <label class="login-label">SELECT YOUR COMMERCIAL ROLE TO SIGN IN</label>
+
+                <!-- Quick Persona Quick-Select Cards -->
+                <div class="persona-cards-grid">
+                    <div class="persona-card" data-user-id="U001">
+                        <div class="persona-header">
+                            <span class="badge badge-exec">EXEC</span>
+                            <span class="persona-name">Sarah Chen</span>
+                        </div>
+                        <p class="persona-desc">Global Access • Full Revenue & Pricing (WAC)</p>
+                    </div>
+
+                    <div class="persona-card" data-user-id="U003">
+                        <div class="persona-header">
+                            <span class="badge badge-director">DIRECTOR</span>
+                            <span class="persona-name">Jennifer Walsh</span>
+                        </div>
+                        <p class="persona-desc">Northeast Region • Multi-Territory Volume</p>
+                    </div>
+
+                    <div class="persona-card" data-user-id="U009">
+                        <div class="persona-header">
+                            <span class="badge badge-ram">RAM</span>
+                            <span class="persona-name">Amy Nguyen</span>
+                        </div>
+                        <p class="persona-desc">New York Metro • Field Account Rep</p>
+                    </div>
+                </div>
+
+                <!-- Or choose from all 23 field users -->
+                <div class="dropdown-divider">
+                    <span>or select specific team member</span>
+                </div>
+
+                <div class="form-group">
+                    <select id="login-user-select" class="form-input">
+                        <option value="" disabled selected>Loading all representatives...</option>
+                    </select>
+                </div>
+
+                <button id="btn-login-submit" class="btn-primary btn-login">
+                    <span>Sign In to Analytics Portal</span>
+                    <span>→</span>
+                </button>
+            </div>
+
+            <div class="login-footer">
+                <span>Role-Based Access Control (RBAC) securely scopes data and pricing permissions.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 2. MAIN CONVERSATIONAL CHAT SCREEN         -->
+    <!-- ========================================== -->
+    <div id="main-view" class="app-layout" style="display: none;">
+        <!-- Sidebar Navigation / Profile Panel -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-logo">
+                    <span class="logo-icon">✨</span>
+                </div>
+                <div class="brand-info">
+                    <h2>NovaPharma AI</h2>
+                    <span class="brand-tag">Commercial Intelligence</span>
+                </div>
+            </div>
+
+            <!-- Active User Persona Card -->
+            <div class="user-selector-card">
+                <div class="card-header">
+                    <span class="label">LOGGED IN USER</span>
+                    <span id="role-badge" class="badge badge-exec">EXEC</span>
+                </div>
+                <div class="user-profile-display">
+                    <strong id="active-user-name">Sarah Chen</strong>
+                    <span id="active-user-email" class="user-email-text">sarah.chen@novapharma.com</span>
+                </div>
+                <div class="user-meta" id="user-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Data Scope:</span>
+                        <span class="meta-value" id="user-scope">Global</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">WAC Pricing:</span>
+                        <span class="meta-value text-success" id="user-wac-status">Authorized</span>
+                    </div>
+                </div>
+                <button id="btn-switch-user" class="btn-switch-account">
+                    <span>👤 Switch Account / Sign Out</span>
+                </button>
+            </div>
+
+            <!-- Quick Navigation & Knowledge Links -->
+            <div class="sidebar-menu">
+                <div class="menu-heading">KNOWLEDGE & SETTINGS</div>
+                <button class="menu-item" id="btn-open-schema">
+                    <span class="menu-icon">📊</span>
+                    <span>Product Catalog & Market</span>
+                </button>
+                <button class="menu-item" id="btn-open-rules">
+                    <span class="menu-icon">🛡️</span>
+                    <span>Metric Definitions</span>
+                </button>
+                <button class="menu-item" id="btn-open-logs">
+                    <span class="menu-icon">📜</span>
+                    <span>Activity & Error Logs</span>
+                </button>
+                <button class="menu-item" id="btn-open-settings">
+                    <span class="menu-icon">⚙️</span>
+                    <span>AI Engine Settings</span>
+                </button>
+            </div>
+
+            <!-- Quick Starters tailored by role -->
+            <div class="starters-section">
+                <div class="menu-heading">SUGGESTED QUESTIONS</div>
+                <div class="starters-list" id="starters-container">
+                    <!-- Populated dynamically based on user role -->
+                </div>
+            </div>
+
+            <!-- System Status Footer -->
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span id="system-status-text">Connected</span>
+                </div>
+                <button id="theme-toggle-btn" class="icon-button" title="Toggle Dark/Light Mode">🌓</button>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <h1 id="page-title">Commercial Analytics Assistant</h1>
+                    <p class="subtitle">Ask any question in plain English about sales, market share, accounts, or trends</p>
+                </div>
+                <div class="header-right">
+                    <button class="btn-secondary" id="btn-clear-chat">
+                        <span>🔄</span> Clear Conversation
+                    </button>
+                </div>
+            </header>
+
+            <!-- Global Model Status Banner (Shown when API key missing or offline) -->
+            <div id="model-status-banner" class="model-alert-banner" style="display: none;">
+                <div class="alert-content">
+                    <span class="alert-icon">⚠️</span>
+                    <span id="model-alert-text">Server not working, please put a valid API key in Settings.</span>
+                </div>
+                <button class="btn-banner-action" id="btn-banner-open-settings">Configure API Key</button>
+            </div>
+
+            <!-- Chat Messages Container -->
+            <div class="chat-container" id="chat-messages">
+                <!-- Welcome Message -->
+                <div class="message-wrapper assistant-wrapper">
+                    <div class="avatar assistant-avatar">✨</div>
+                    <div class="message-bubble assistant-bubble">
+                        <div class="message-header">
+                            <span class="sender-name">NovaPharma Assistant</span>
+                            <span class="timestamp">Just now</span>
+                        </div>
+                        <div class="message-body">
+                            <p>Hello <strong id="welcome-user-name">Sarah Chen</strong>! I am your AI Commercial Analytics Assistant. You can ask me natural language questions such as:</p>
+                            <ul>
+                                <li><em>"What is our market share for Zenovax in Docetaxel?"</em></li>
+                                <li><em>"Show me our top 5 accounts by volume this quarter"</em></li>
+                                <li><em>"How has Carbotrel volume trended over the last 6 months?"</em></li>
+                                <li><em>"Give me a list of all products in our catalog"</em></li>
+                            </ul>
+                            <p class="hint-text">💡 Click any suggested question on the left or type your own question below.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Bar -->
+            <div class="input-area">
+                <form id="chat-form" class="chat-input-form">
+                    <div class="input-wrapper">
+                        <textarea 
+                            id="chat-input" 
+                            placeholder="Ask a commercial question (e.g., 'What are our top performing products this quarter?')..." 
+                            rows="1"
+                            required
+                        ></textarea>
+                        <button type="submit" id="send-btn" class="btn-send" title="Send Message">
+                            <span class="send-icon">➤</span>
+                        </button>
+                    </div>
+                </form>
+                <div class="input-footer">
+                    <span>Press <kbd>Enter</kbd> to send, <kbd>Shift + Enter</kbd> for new line.</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal: Schema & Domain Glossary Explorer -->
+    <div class="modal-overlay" id="schema-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>📊 Product Catalog & Domain Knowledge</h3>
+                <button class="modal-close" id="btn-close-schema">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="tab-products">Branded Products</button>
+                    <button class="tab-btn" data-tab="tab-metrics">Metric Definitions</button>
+                    <button class="tab-btn" data-tab="tab-schema">Database Tables</button>
+                </div>
+                <div class="tab-content active" id="tab-products">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Brand</th>
+                                <th>Generic Name</th>
+                                <th>Specialty</th>
+                                <th>Market Category</th>
+                                <th>Subcategory</th>
+                            </tr>
+                        </thead>
+                        <tbody id="products-table-body">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-content" id="tab-metrics">
+                    <div class="glossary-item">
+                        <h4>Market Share (%)</h4>
+                        <p>Measures NovaPharma branded volume relative to the total therapeutic market volume.</p>
+                        <code>Market Share = NovaPharma Distributor Equivalents / Total Market Data Equivalents</code>
+                    </div>
+                    <div class="glossary-item">
+                        <h4>Equivalents</h4>
+                        <p>Converts raw pack units into standardized dosing units so different package sizes can be compared.</p>
+                        <code>Equivalents = Pack Units × Unit Conversion Factor</code>
+                    </div>
+                    <div class="glossary-item">
+                        <h4>Rolling Periods</h4>
+                        <p>Standard analytical windows: <strong>R3M</strong> (Rolling 3 Months) and <strong>R6M</strong> (Prior 3 Months comparison).</p>
+                    </div>
+                </div>
+                <div class="tab-content" id="tab-schema">
+                    <pre class="code-block" id="schema-ddl-code">Loading schema...</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Settings -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal-card modal-sm">
+            <div class="modal-header">
+                <h3>⚙️ AI Engine Settings</h3>
+                <button class="modal-close" id="btn-close-settings">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="provider-select">LLM Provider</label>
+                    <select id="provider-select" class="form-input">
+                        <option value="gemini">Google Gemini (Default)</option>
+                        <option value="openai">OpenAI (GPT-4o)</option>
+                        <option value="groq">Groq (Llama 3.3 70B)</option>
+                        <option value="anthropic">Anthropic Claude</option>
+                    </select>
+                </div>
+                <div class="form-group" id="api-key-group">
+                    <label for="api-key-input">API Key</label>
+                    <input type="password" id="api-key-input" class="form-input" placeholder="Paste your API Key here...">
+                    <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 4px;">Leave blank to use the server environment default key.</small>
+                </div>
+                <button class="btn-primary" id="btn-save-settings">Save & Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Activity & Error Logs Viewer -->
+    <div class="modal-overlay" id="logs-modal">
+        <div class="modal-card" style="max-width: 860px;">
+            <div class="modal-header">
+                <h3>📜 Live Interaction & Error Logs</h3>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button class="btn-mini" id="btn-clear-logs">Clear Logs</button>
+                    <button class="btn-mini" id="btn-refresh-logs">🔄 Refresh</button>
+                    <button class="modal-close" id="btn-close-logs">✕</button>
+                </div>
+            </div>
+            <div class="modal-body" style="padding: 16px;">
+                <div id="logs-container" class="logs-stream-container">
+                    <div style="text-align: center; color: var(--text-muted); padding: 20px;">Loading interaction logs...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
