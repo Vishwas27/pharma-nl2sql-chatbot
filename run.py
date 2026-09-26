@@ -12,14 +12,18 @@ def main():
     print("=================================================================")
     print("[1/2] Verifying database and schema...")
     init_database()
-    print("[2/2] Launching local web server on http://localhost:8000 ...")
-    print(">>> Open your browser at: http://localhost:8000")
+    import os
+    host = os.environ.get("HOST", "0.0.0.0")
+    port = int(os.environ.get("PORT", "8000"))
+    
+    print(f"[2/2] Launching web server on http://{host}:{port} ...")
+    print(f">>> Access the web interface at: http://localhost:{port}")
     print("=================================================================\n")
     
     uvicorn.run(
         "backend.app:app",
-        host="127.0.0.1",
-        port=8000,
+        host=host,
+        port=port,
         reload=False,
         log_level="info"
     )
