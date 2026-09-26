@@ -315,7 +315,7 @@ function resetConversation() {
             <div class="avatar assistant-avatar">✨</div>
             <div class="message-bubble assistant-bubble">
                 <div class="message-header">
-                    <span class="sender-name">NovaPharma Assistant</span>
+                    <span class="sender-name">Pharma Analytics Bot</span>
                     <span class="timestamp">Just now</span>
                 </div>
                 <div class="message-body">
@@ -580,7 +580,7 @@ function appendAssistantResponse(resp) {
         <div class="avatar assistant-avatar">✨</div>
         <div class="message-bubble assistant-bubble">
             <div class="message-header">
-                <span class="sender-name">NovaPharma Assistant</span>
+                <span class="sender-name">Pharma Analytics Bot</span>
                 <span class="timestamp">${getCurrentTime()}</span>
             </div>
             <div class="message-body">

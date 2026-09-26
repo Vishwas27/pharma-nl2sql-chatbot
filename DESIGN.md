@@ -63,13 +63,13 @@ flowchart TD
 
 ## 2.1 Multi-Agent Orchestration & Supervision Harness
 
-NovaPharma Assistant is architected as an **Autonomous Multi-Agent Harness** ([backend/agent_harness.py](file:///c:/Users/karti/Downloads/Projects/AI%20Slop/Pharma_Chatbot/backend/agent_harness.py)) that separates responsibilities across specialized agents with runtime telemetry and self-healing reflexion:
+Pharma Analytics Bot is architected as an **Autonomous Multi-Agent Harness** ([backend/agent_harness.py](file:///c:/Users/karti/Downloads/Projects/AI%20Slop/Pharma_Chatbot/backend/agent_harness.py)) that separates responsibilities across specialized agents with runtime telemetry and self-healing reflexion:
 
 ```mermaid
 flowchart TD
     UserQuery["User Natural Language Query"] --> Supervisor["🎯 Supervisor & Intent Router"]
     
-    subgraph MultiAgentHarness ["NovaPharma Multi-Agent Harness"]
+    subgraph MultiAgentHarness ["Autonomous Multi-Agent Harness"]
         Supervisor -->|Domain Knowledge & RAG Context| SQLAgent["1. 🏛️ SQL Architect Agent\n(Translates NL into precision SQLite)"]
         SQLAgent -->|Draft SQL| SecAgent["2. 🛡️ Compliance & Security Guardrail Agent\n(AST Validator + RBAC Scope Lock + WAC Scrubber)"]
         
@@ -142,7 +142,7 @@ $$\text{Market Share} = \frac{\sum(\text{pack\_units} \times \text{unit\_convers
 
 ## 4.1 Multi-Domain Knowledge Layer (RAG) Architecture
 
-Rather than treating all documentation as a single monolithic block, NovaPharma Assistant incorporates a **Multi-Domain RAG Architecture** ([backend/rag_engine.py](file:///c:/Users/karti/Downloads/Projects/AI%20Slop/Pharma_Chatbot/backend/rag_engine.py)) that segregates distinct business documents into domain-specific knowledge bases:
+Rather than treating all documentation as a single monolithic block, Pharma Analytics Bot incorporates a **Multi-Domain RAG Architecture** ([backend/rag_engine.py](file:///c:/Users/karti/Downloads/Projects/AI%20Slop/Pharma_Chatbot/backend/rag_engine.py)) that segregates distinct business documents into domain-specific knowledge bases:
 
 ```mermaid
 flowchart TD
