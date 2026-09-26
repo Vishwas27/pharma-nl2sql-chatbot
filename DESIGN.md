@@ -1,8 +1,8 @@
-# NovaPharma Commercial Analytics Assistant — Design Document
+# Pharma Analytics Bot (Enterprise Commercial Intelligence AI) — Design Document
 
 ## 1. Executive Summary
 
-The **NovaPharma Commercial Analytics Assistant** is a production-grade Natural Language to SQL (NL-to-SQL) conversational AI system designed for pharmaceutical commercial analytics users (Executives, Regional Sales Directors, and Regional Account Managers). 
+The **Pharma Analytics Bot** is a production-grade Natural Language to SQL (NL-to-SQL) conversational AI system designed for pharmaceutical commercial analytics users (Executives, Regional Sales Directors, and Regional Account Managers) across multi-source, billion-scale enterprise commercial datasets. 
 
 The system enables non-technical commercial users to ask complex analytical questions in plain English—such as market share dynamics, account rankings, 6-month product volume trends, and GPO affiliations—and immediately receive executive-ready answers, interactive visual charts, and structured tabular data with sub-millisecond query performance.
 

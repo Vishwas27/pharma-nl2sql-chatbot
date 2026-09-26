@@ -1,6 +1,6 @@
-# 🚀 NovaPharma Commercial Analytics AI - AWS Deployment Guide
+# 🚀 Pharma Analytics Bot - AWS Deployment Guide
 
-This guide details how to deploy the **NovaPharma NL-to-SQL Commercial Analytics AI Assistant** to AWS so evaluators and stakeholders can access the full interactive web application via a public URL.
+This guide details how to deploy the **Pharma Analytics Bot (Commercial Intelligence NL-to-SQL Assistant)** to AWS so evaluators and stakeholders can access the full interactive web application via a public URL.
 
 ---
 
@@ -9,7 +9,7 @@ This guide details how to deploy the **NovaPharma NL-to-SQL Commercial Analytics
 ```mermaid
 flowchart LR
     User[Evaluator Browser] -->|HTTPS :443 / :8000| ALB[AWS App Runner / EC2 Nginx]
-    ALB --> Container[Docker Container: NovaPharma Assistant]
+    ALB --> Container[Docker Container: Pharma Analytics Bot]
     Container --> FastAPI[FastAPI REST API & Static UI]
     Container --> Agents[Multi-Agent Harness: 5 Specialized Agents]
     Container --> SQLite[(In-Process SQLite WAL Engine)]

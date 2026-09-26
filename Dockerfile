@@ -1,5 +1,5 @@
 # ==============================================================================
-# NovaPharma Commercial Analytics Assistant - Production Docker Container
+# Pharma Analytics Bot - Production Docker Container
 # ==============================================================================
 FROM python:3.10-slim
 

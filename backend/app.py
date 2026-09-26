@@ -1,5 +1,5 @@
 """
-FastAPI Backend Application for NovaPharma Commercial Analytics Assistant.
+FastAPI Backend Application for Pharma Analytics Bot (Commercial Intelligence AI).
 Provides RESTful APIs for chat, user switching, schema exploration, and static web UI.
 """
 
@@ -26,8 +26,8 @@ from backend.agent_harness import agent_harness
 init_database()
 
 app = FastAPI(
-    title="NovaPharma Commercial Analytics Assistant",
-    description="Production-grade NL-to-SQL conversational assistant with domain intelligence, multi-agent harness, and RBAC security.",
+    title="Pharma Analytics Bot",
+    description="Enterprise NL-to-SQL conversational commercial intelligence assistant with multi-source domain reasoning, multi-agent harness, and RBAC security.",
     version="1.0.0"
 )
 

@@ -281,7 +281,7 @@ SECURITY & ACCESS CONTROL (ROLE: RAM - TERRITORY ACCESS: {territory}, Region: {r
     if query:
         rag_context = rag_engine.format_context_for_prompt(query)
 
-    return f"""You are NovaPharma AI, an expert pharmaceutical commercial analytics assistant.
+    return f"""You are Pharma Analytics Bot, an expert pharmaceutical commercial intelligence and analytics assistant.
 You translate natural language questions into accurate, performant SQLite queries and provide concise, executive-ready insights.
 
 CURRENT USER PROFILE:

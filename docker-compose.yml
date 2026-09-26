@@ -1,11 +1,11 @@
 version: '3.8'
 
 services:
-  novapharma-assistant:
+  pharma-analytics-bot:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: novapharma_ai_assistant
+    container_name: pharma_analytics_bot
     restart: unless-stopped
     ports:
       - "8000:8000"

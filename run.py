@@ -1,5 +1,5 @@
 """
-Startup Script for NovaPharma Commercial Analytics Assistant.
+Startup Script for Pharma Analytics Bot (Commercial Intelligence AI).
 Launches the FastAPI server and serves the web application locally.
 """
 
@@ -8,7 +8,7 @@ from backend.db import init_database
 
 def main():
     print("=================================================================")
-    print("   NovaPharma Commercial Analytics Assistant (NL-to-SQL)")
+    print("   Pharma Analytics Bot (Commercial Intelligence NL-to-SQL)")
     print("=================================================================")
     print("[1/2] Verifying database and schema...")
     init_database()
