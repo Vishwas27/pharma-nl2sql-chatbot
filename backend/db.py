@@ -66,6 +66,20 @@ def init_database(force_reseed: bool = False) -> None:
                 seed_data_sql = f.read()
             conn.executescript(seed_data_sql)
             
+        # Check if users exist, seed default persona users if empty
+        cursor.execute("SELECT COUNT(*) FROM users;")
+        user_count = cursor.fetchone()[0]
+        if user_count == 0:
+            print("[DB] Seeding default persona users...")
+            seed_users_sql = """
+            INSERT OR IGNORE INTO users (user_id, email, full_name, role, territory_name, region_name, can_view_wac) VALUES
+            ('usr_exec_01', 'sarah.chen@novapharma.com', 'Sarah Chen', 'exec', NULL, NULL, 1),
+            ('usr_dir_ne', 'marcus.vance@novapharma.com', 'Marcus Vance', 'director', NULL, 'Northeast', 0),
+            ('usr_ram_nym', 'amy.nguyen@novapharma.com', 'Amy Nguyen', 'ram', 'New York Metro', 'Northeast', 0),
+            ('usr_ram_tx', 'david.miller@novapharma.com', 'David Miller', 'ram', 'Texas', 'South', 0);
+            """
+            cursor.executescript(seed_users_sql)
+
         # Create performance indices for fast analytics queries
         print("[DB] Creating high-performance indexes...")
         indices = [
@@ -86,6 +100,20 @@ def init_database(force_reseed: bool = False) -> None:
         conn.commit()
         print("[DB] Database initialization complete.")
     else:
+        # Verify users exist even if sales table exists
+        cursor.execute("SELECT COUNT(*) FROM users;")
+        user_count = cursor.fetchone()[0]
+        if user_count == 0:
+            print("[DB] Seeding default persona users into existing database...")
+            seed_users_sql = """
+            INSERT OR IGNORE INTO users (user_id, email, full_name, role, territory_name, region_name, can_view_wac) VALUES
+            ('usr_exec_01', 'sarah.chen@novapharma.com', 'Sarah Chen', 'exec', NULL, NULL, 1),
+            ('usr_dir_ne', 'marcus.vance@novapharma.com', 'Marcus Vance', 'director', NULL, 'Northeast', 0),
+            ('usr_ram_nym', 'amy.nguyen@novapharma.com', 'Amy Nguyen', 'ram', 'New York Metro', 'Northeast', 0),
+            ('usr_ram_tx', 'david.miller@novapharma.com', 'David Miller', 'ram', 'Texas', 'South', 0);
+            """
+            cursor.executescript(seed_users_sql)
+            conn.commit()
         print(f"[DB] Database already initialized with {sales_count} sales rows.")
         
     conn.close()
