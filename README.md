@@ -1,26 +1,30 @@
 # Pharma Analytics Bot 🏥📊
 ### Enterprise Conversational AI for Commercial Intelligence (NL-to-SQL)
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-46E3B7.svg?style=for-the-badge&logo=render)](https://pharma-nl2sql-chatbot.onrender.com)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg)](https://fastapi.tiangolo.com/)
 [![SQLite](https://img.shields.io/badge/SQLite-WAL--Mode-003B57.svg)](https://www.sqlite.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-An end-to-end commercial analytics assistant built for pharmaceutical executives, regional sales directors, and account managers. It translates complex natural language business questions into precise, high-performance SQL queries over multi-source billion-scale commercial datasets (sales, organizations, products, and sales territories).
+**Live Cloud URL**: [https://pharma-nl2sql-chatbot.onrender.com](https://pharma-nl2sql-chatbot.onrender.com)
+
+An end-to-end commercial analytics assistant built for pharmaceutical executives, regional sales directors, and account managers. It translates complex natural language business questions into precise, high-performance SQL queries over multi-source commercial datasets (sales, organizations, products, and sales territories).
 
 ---
 
 ## 🌟 Key Features
 
-- **🤖 Multi-Agent Orchestration Harness**: Specialized agents for Intent Routing, SQL Architecture, Security Supervision, DB Execution Reflection, and Visual Analytics.
+- **🤖 Multi-Agent Orchestration Harness**: 5 specialized agents for Intent Routing, SQL Architecture, Security Supervision, DB Execution Reflection, and Visual Analytics.
 - **🛡️ Multi-Layer Security & RBAC Guardrails**:
   - **Exec**: Full visibility across all territories, regions, and sensitive pricing metrics (**WAC**).
   - **Director**: Scoped exclusively to assigned regions (**WAC pricing strictly hidden**).
   - **RAM (Account Manager)**: Scoped exclusively to assigned territory (**WAC pricing strictly hidden**).
 - **📚 Domain Knowledge & RAG Reasoning**: Incorporates pharma commercial definitions—market share formulas, distributor vs. market data sources, NDC unit conversion factors, and brand filtering.
 - **💬 Persistent Multi-User Session History**: ChatGPT-style left sidebar panel allowing users to save, switch, rename, and auto-title chat conversations across sessions.
+- **📱 Mobile & Tablet Responsive**: Responsive interface with a collapsible hamburger navigation drawer and adaptive layouts for all screen sizes.
 - **📈 Rich Visual Analytics**: Interactive Chart.js integration automatically renders trends, market share breakdowns, and top account rankings.
-- **⚡ Sub-Millisecond Database Execution**: SQLite engine with optimized WAL mode and compound indexing across `sales`, `organizations`, and `zip_territory`.
+- **⚡ Sub-Millisecond Database Execution**: SQLite engine with optimized WAL mode, compound indexing, and zero-configuration bundled production auto-seeding.
 
 ---
 
@@ -55,7 +59,7 @@ flowchart TD
 - **[`security.py`](backend/security.py)**: Compliance guardrail enforcing read-only AST query validation, row-level scope injection (territory/region constraints), and column-level WAC pricing restriction.
 - **[`domain_knowledge.py`](backend/domain_knowledge.py)**: Rules engine storing DDL schema definitions, product classifications, market share SQL formulas, and commercial metrics guidance.
 - **[`rag_engine.py`](backend/rag_engine.py)**: Lightweight semantic RAG vector engine providing contextual domain documentation during query generation.
-- **[`db.py`](backend/db.py)**: High-throughput database layer managing SQLite connections, index initialization, schema queries, and persistent user session CRUD operations.
+- **[`db.py`](backend/db.py)**: High-throughput database layer managing SQLite connections, index initialization, schema queries, and persistent user session CRUD operations with idempotent auto-seeding.
 - **[`llm_engine.py`](backend/llm_engine.py)**: Provider abstraction layer supporting Google Gemini, OpenAI, Groq, Anthropic, or local offline fallbacks.
 
 ---
@@ -112,9 +116,15 @@ python -m unittest tests/test_system.py
 
 ---
 
-## 🐳 Docker & Cloud Deployment
+## ☁️ Cloud & Docker Deployment
 
-### Run with Docker Compose
+### 1. Live Deployment on Render (Current)
+The project is containerized with a production [`Dockerfile`](Dockerfile) and configured for continuous deployment on Render:
+* **Live Service**: [https://pharma-nl2sql-chatbot.onrender.com](https://pharma-nl2sql-chatbot.onrender.com)
+* **Build Command**: Automatically builds via Docker.
+* **Environment Variables**: Set `GEMINI_API_KEY` in Render environment settings.
+
+### 2. Run Locally with Docker Compose
 
 ```bash
 docker-compose up -d --build
@@ -122,8 +132,8 @@ docker-compose up -d --build
 
 Access the application at `http://localhost:8000`.
 
-### Deploying to AWS (EC2)
-Follow the step-by-step deployment guide in **[`DEPLOYMENT_AWS.md`](DEPLOYMENT_AWS.md)** to host on AWS EC2 with Docker.
+### 3. Deploying to AWS (EC2 / App Runner)
+For enterprise AWS deployments, refer to **[`DEPLOYMENT_AWS.md`](DEPLOYMENT_AWS.md)**.
 
 ---
 
