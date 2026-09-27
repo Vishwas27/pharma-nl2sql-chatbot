@@ -104,18 +104,18 @@ DOMAIN_RULES = """
 ### DOMAIN RULES & BUSINESS METRIC DEFINITIONS:
 
 1. **DATA SOURCES**:
-   - `distributor`: NovaPharma's shipment data (paid demand). ALWAYS use this for NovaPharma sales, volume, and revenue queries. Must filter `data_source = 'distributor' AND brand_flag = 1`.
+   - `distributor`: Primary pharmaceutical shipment data (paid demand). ALWAYS use this for commercial portfolio sales, volume, and revenue queries. Must filter `data_source = 'distributor' AND brand_flag = 1`.
    - `hub_dispense`: Free drug / patient assistance program (PAP). `wac = 0`. ONLY include if the user specifically asks about free drug, PAP, or "total volume including free drug".
    - `market_data`: Third-party competitor & market research volume. Used exclusively for Market Share denominator, competitive analysis, or total market size.
 
 2. **MARKET SHARE FORMULA**:
-   - Market Share = (NovaPharma Branded Equivalents from `distributor`) / (Total Market Equivalents from `market_data`).
+   - Market Share = (Branded Equivalents from `distributor`) / (Total Market Equivalents from `market_data`).
    - Both numerator and denominator MUST be calculated for the same therapeutic `market_subcategory` (or `market_category`).
    - Equivalents calculation: `SUM(s.pack_units * p.unit_conversion_factor)` or `SUM(s.total_mg / p.mg_equivalent)`.
    - Example SQL structure:
      ```sql
-     WITH nova_vol AS (
-         SELECT SUM(s.pack_units * p.unit_conversion_factor) AS nova_eq
+     WITH brand_vol AS (
+         SELECT SUM(s.pack_units * p.unit_conversion_factor) AS brand_eq
          FROM sales s
          JOIN products p ON s.ndc = p.ndc
          WHERE s.data_source = 'distributor' AND s.brand_flag = 1 AND p.market_subcategory = 'Docetaxel'
@@ -127,10 +127,10 @@ DOMAIN_RULES = """
          WHERE s.data_source = 'market_data' AND p.market_subcategory = 'Docetaxel'
      )
      SELECT 
-         nova_eq, 
+         brand_eq, 
          mkt_eq, 
-         ROUND((nova_eq * 100.0) / NULLIF(mkt_eq, 0), 2) AS market_share_pct
-     FROM nova_vol, market_vol;
+         ROUND((brand_eq * 100.0) / NULLIF(mkt_eq, 0), 2) AS market_share_pct
+     FROM brand_vol, market_vol;
      ```
 
 3. **PERIOD OFFSETS (ALWAYS PREFER OFFSETS OVER DATE MATH)**:
@@ -314,7 +314,8 @@ SQL & RESPONSE GUIDELINES:
     "y_keys": ["column_name_for_metrics"],
     "suggestions": ["Follow-up question 1", "Follow-up question 2"]
 }}
-4. If the user question is a greeting, out of scope, or cannot be answered with SQL, provide a helpful explanation with "sql": null.
+4. OUT-OF-SCOPE / UNRELATED TOPICS:
+   - If the user asks a question unrelated to pharmaceutical commercial analytics (e.g. sports, politics, general trivia, weather, pop culture), politely inform them that the question is outside the scope of our pharmaceutical commercial analytics knowledge base, and suggest analytics topics they can ask about (e.g., product volume trends, market share, top accounts, or territory rankings). Set "sql": null.
 5. Always handle division by zero using `NULLIF(denominator, 0)`.
 6. For product volumes, default to `pack_units` or equivalents. For revenue (Exec only), use `SUM(s.wac)`.
 7. MULTI-TURN CONVERSATION & DRILL-DOWN RULES:
