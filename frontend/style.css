@@ -1553,3 +1553,143 @@ kbd {
     line-height: 1.5;
 }
 
+/* ==========================================================================
+   MOBILE & ANDROID RESPONSIVE SYSTEM
+   ========================================================================== */
+
+/* Hamburger Button */
+.mobile-menu-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-sm);
+    font-size: 1.25rem;
+    cursor: pointer;
+    margin-right: 10px;
+    flex-shrink: 0;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.mobile-menu-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-color);
+}
+
+/* Mobile Backdrop Overlay */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 998;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.sidebar-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+@media (max-width: 768px) {
+    .mobile-menu-btn {
+        display: flex;
+    }
+
+    .sidebar-overlay {
+        display: block;
+    }
+
+    .app-layout {
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    /* Sidebar transforms into off-canvas sliding drawer */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 290px;
+        max-width: 85vw;
+        height: 100vh;
+        z-index: 999;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+    }
+
+    .sidebar.mobile-open {
+        transform: translateX(0);
+    }
+
+    /* Main chat container adjusts to full screen */
+    .main-content {
+        width: 100vw;
+        min-width: 100%;
+        height: 100vh;
+    }
+
+    .top-header {
+        padding: 10px 14px;
+    }
+
+    .header-left h1 {
+        font-size: 1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 180px;
+    }
+
+    .header-left .subtitle {
+        display: none;
+    }
+
+    .chat-container {
+        padding: 12px 10px 90px 10px;
+    }
+
+    .message-wrapper {
+        gap: 8px;
+    }
+
+    .message-bubble {
+        max-width: 92%;
+        padding: 12px 14px;
+        font-size: 0.88rem;
+    }
+
+    .input-area {
+        padding: 10px 12px 14px 12px;
+    }
+
+    .chat-input-form textarea {
+        font-size: 0.9rem;
+    }
+
+    /* Persona grid on login screen adapts cleanly */
+    .persona-cards-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .login-card {
+        padding: 24px 16px;
+        width: 94%;
+        margin: 16px auto;
+    }
+}
+

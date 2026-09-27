@@ -74,6 +74,38 @@ function setupEventListeners() {
         localStorage.setItem("nova_theme", nextTheme);
     });
 
+    // Mobile Hamburger Menu & Drawer Toggle
+    const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+    const sidebarOverlay = document.getElementById("sidebar-overlay");
+    const sidebar = document.querySelector(".sidebar");
+
+    if (mobileMenuBtn && sidebar && sidebarOverlay) {
+        const toggleMobileMenu = (open) => {
+            if (open === undefined) {
+                sidebar.classList.toggle("mobile-open");
+                sidebarOverlay.classList.toggle("active");
+            } else if (open) {
+                sidebar.classList.add("mobile-open");
+                sidebarOverlay.classList.add("active");
+            } else {
+                sidebar.classList.remove("mobile-open");
+                sidebarOverlay.classList.remove("active");
+            }
+        };
+
+        mobileMenuBtn.addEventListener("click", () => toggleMobileMenu());
+        sidebarOverlay.addEventListener("click", () => toggleMobileMenu(false));
+
+        // Auto close drawer when selecting a session or clicking action on mobile
+        document.querySelectorAll(".menu-item, .btn-new-chat, .btn-switch-account").forEach(el => {
+            el.addEventListener("click", () => {
+                if (window.innerWidth <= 768) {
+                    toggleMobileMenu(false);
+                }
+            });
+        });
+    }
+
     // Login Persona Cards Quick-Select (1-Click Login & Select)
     document.querySelectorAll(".persona-card").forEach(card => {
         card.addEventListener("click", () => {
