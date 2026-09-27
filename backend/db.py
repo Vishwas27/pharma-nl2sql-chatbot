@@ -66,17 +66,34 @@ def init_database(force_reseed: bool = False) -> None:
                 seed_data_sql = f.read()
             conn.executescript(seed_data_sql)
             
-        # Check if users exist, seed default persona users if empty
+        # Check if users exist, seed comprehensive list of persona users if empty
         cursor.execute("SELECT COUNT(*) FROM users;")
         user_count = cursor.fetchone()[0]
-        if user_count == 0:
-            print("[DB] Seeding default persona users...")
+        if user_count < 10:
+            print("[DB] Seeding comprehensive list of commercial users...")
             seed_users_sql = """
             INSERT OR IGNORE INTO users (user_id, email, full_name, role, territory_name, region_name, can_view_wac) VALUES
+            -- Executives
             ('usr_exec_01', 'sarah.chen@novapharma.com', 'Sarah Chen', 'exec', NULL, NULL, 1),
+            ('usr_exec_02', 'robert.taylor@novapharma.com', 'Robert Taylor', 'exec', NULL, NULL, 1),
+            
+            -- Regional Directors
             ('usr_dir_ne', 'marcus.vance@novapharma.com', 'Marcus Vance', 'director', NULL, 'Northeast', 0),
+            ('usr_dir_ma', 'elizabeth.stone@novapharma.com', 'Elizabeth Stone', 'director', NULL, 'Mid-Atlantic', 0),
+            ('usr_dir_se', 'james.holloway@novapharma.com', 'James Holloway', 'director', NULL, 'Southeast', 0),
+            ('usr_dir_mw', 'karen.brooks@novapharma.com', 'Karen Brooks', 'director', NULL, 'Midwest', 0),
+            ('usr_dir_sc', 'thomas.wright@novapharma.com', 'Thomas Wright', 'director', NULL, 'South Central', 0),
+            ('usr_dir_we', 'patricia.king@novapharma.com', 'Patricia King', 'director', NULL, 'West', 0),
+
+            -- Regional Account Managers (RAMs)
             ('usr_ram_nym', 'amy.nguyen@novapharma.com', 'Amy Nguyen', 'ram', 'New York Metro', 'Northeast', 0),
-            ('usr_ram_tx', 'david.miller@novapharma.com', 'David Miller', 'ram', 'Texas', 'South', 0);
+            ('usr_ram_ne', 'brian.kelly@novapharma.com', 'Brian Kelly', 'ram', 'New England', 'Northeast', 0),
+            ('usr_ram_tx', 'david.miller@novapharma.com', 'David Miller', 'ram', 'Texas', 'South Central', 0),
+            ('usr_ram_seg', 'rachel.adams@novapharma.com', 'Rachel Adams', 'ram', 'Southeast Gulf', 'Southeast', 0),
+            ('usr_ram_fl', 'michael.scott@novapharma.com', 'Michael Scott', 'ram', 'Florida', 'Southeast', 0),
+            ('usr_ram_cgl', 'lisa.ray@novapharma.com', 'Lisa Ray', 'ram', 'Chicago & Great Lakes', 'Midwest', 0),
+            ('usr_ram_pnw', 'kevin.zhang@novapharma.com', 'Kevin Zhang', 'ram', 'Pacific Northwest', 'West', 0),
+            ('usr_ram_sca', 'jessica.martinez@novapharma.com', 'Jessica Martinez', 'ram', 'Southern California', 'West', 0);
             """
             cursor.executescript(seed_users_sql)
 
@@ -103,14 +120,31 @@ def init_database(force_reseed: bool = False) -> None:
         # Verify users exist even if sales table exists
         cursor.execute("SELECT COUNT(*) FROM users;")
         user_count = cursor.fetchone()[0]
-        if user_count == 0:
-            print("[DB] Seeding default persona users into existing database...")
+        if user_count < 10:
+            print("[DB] Seeding comprehensive list of commercial users into existing database...")
             seed_users_sql = """
             INSERT OR IGNORE INTO users (user_id, email, full_name, role, territory_name, region_name, can_view_wac) VALUES
+            -- Executives
             ('usr_exec_01', 'sarah.chen@novapharma.com', 'Sarah Chen', 'exec', NULL, NULL, 1),
+            ('usr_exec_02', 'robert.taylor@novapharma.com', 'Robert Taylor', 'exec', NULL, NULL, 1),
+            
+            -- Regional Directors
             ('usr_dir_ne', 'marcus.vance@novapharma.com', 'Marcus Vance', 'director', NULL, 'Northeast', 0),
+            ('usr_dir_ma', 'elizabeth.stone@novapharma.com', 'Elizabeth Stone', 'director', NULL, 'Mid-Atlantic', 0),
+            ('usr_dir_se', 'james.holloway@novapharma.com', 'James Holloway', 'director', NULL, 'Southeast', 0),
+            ('usr_dir_mw', 'karen.brooks@novapharma.com', 'Karen Brooks', 'director', NULL, 'Midwest', 0),
+            ('usr_dir_sc', 'thomas.wright@novapharma.com', 'Thomas Wright', 'director', NULL, 'South Central', 0),
+            ('usr_dir_we', 'patricia.king@novapharma.com', 'Patricia King', 'director', NULL, 'West', 0),
+
+            -- Regional Account Managers (RAMs)
             ('usr_ram_nym', 'amy.nguyen@novapharma.com', 'Amy Nguyen', 'ram', 'New York Metro', 'Northeast', 0),
-            ('usr_ram_tx', 'david.miller@novapharma.com', 'David Miller', 'ram', 'Texas', 'South', 0);
+            ('usr_ram_ne', 'brian.kelly@novapharma.com', 'Brian Kelly', 'ram', 'New England', 'Northeast', 0),
+            ('usr_ram_tx', 'david.miller@novapharma.com', 'David Miller', 'ram', 'Texas', 'South Central', 0),
+            ('usr_ram_seg', 'rachel.adams@novapharma.com', 'Rachel Adams', 'ram', 'Southeast Gulf', 'Southeast', 0),
+            ('usr_ram_fl', 'michael.scott@novapharma.com', 'Michael Scott', 'ram', 'Florida', 'Southeast', 0),
+            ('usr_ram_cgl', 'lisa.ray@novapharma.com', 'Lisa Ray', 'ram', 'Chicago & Great Lakes', 'Midwest', 0),
+            ('usr_ram_pnw', 'kevin.zhang@novapharma.com', 'Kevin Zhang', 'ram', 'Pacific Northwest', 'West', 0),
+            ('usr_ram_sca', 'jessica.martinez@novapharma.com', 'Jessica Martinez', 'ram', 'Southern California', 'West', 0);
             """
             cursor.executescript(seed_users_sql)
             conn.commit()
