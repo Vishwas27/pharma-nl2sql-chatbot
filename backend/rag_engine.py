@@ -60,19 +60,29 @@ class MultiDomainRAGEngine:
         self._load_and_index_documents()
 
     def _load_and_index_documents(self):
-        """Reads and chunks all markdown files from the assignment docs directory."""
-        if not DOCS_DIR.exists():
-            print(f"[RAG] Warning: Docs directory {DOCS_DIR} not found.")
-            return
-
+        """Reads and chunks all markdown files from docs directory, or seeds built-in fallback knowledge."""
         self.domain_stores = {"metrics": [], "products": [], "accounts_and_sources": []}
         self.all_chunks = []
 
-        for domain, filenames in DOMAIN_CATEGORIES.items():
-            for filename in filenames:
-                file_path = DOCS_DIR / filename
-                if file_path.exists():
-                    self._index_file(file_path, domain)
+        if DOCS_DIR.exists():
+            for domain, filenames in DOMAIN_CATEGORIES.items():
+                for filename in filenames:
+                    file_path = DOCS_DIR / filename
+                    if file_path.exists():
+                        self._index_file(file_path, domain)
+
+        # If docs folder is not bundled or produced 0 chunks, seed fallback domain knowledge chunks
+        if len(self.all_chunks) == 0:
+            print("[RAG] Seeding built-in domain knowledge chunks...")
+            for g in GLOSSARY_ITEMS:
+                chunk = KnowledgeChunk(
+                    text=f"{g['term']}: {g['definition']}",
+                    domain=g["domain"],
+                    source_file="builtin_glossary",
+                    title=g["term"]
+                )
+                self.domain_stores[g["domain"]].append(chunk)
+                self.all_chunks.append(chunk)
 
         print(f"[RAG] Initialized Multi-Domain RAG with {len(self.all_chunks)} semantic chunks across {len(self.domain_stores)} domains.")
 
