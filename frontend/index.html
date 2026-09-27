@@ -178,9 +178,6 @@
                     <button id="mobile-menu-btn" class="mobile-menu-btn" title="Toggle Navigation Menu">
                         <span>☰</span>
                     </button>
-                    <button id="btn-toggle-sidebar" class="icon-button desktop-sidebar-btn" title="Toggle Sidebar (Expand/Collapse)">
-                        <span>◧</span>
-                    </button>
                     <div class="header-left">
                         <h1 id="page-title">Commercial Analytics Assistant</h1>
                         <p class="subtitle">Ask any question in plain English about sales, market share, accounts, or trends</p>
@@ -211,18 +208,17 @@
 
             <!-- Chat Messages Container -->
             <div class="chat-container" id="chat-messages">
-                <!-- Welcome View with Interactive Quick-Start Cards -->
+                <!-- Welcome View with Interactive Gemini-Style Quick Starters -->
                 <div class="welcome-container" id="welcome-container">
-                    <div class="welcome-hero">
-                        <div class="welcome-avatar-icon">✨</div>
-                        <div class="welcome-hero-text">
-                            <h2>Hello, <span id="welcome-user-name">Sarah Chen</span>!</h2>
-                            <p class="welcome-role-desc" id="welcome-role-desc">Commercial Intelligence Assistant • Ask any natural language question or pick a quick starter below.</p>
-                        </div>
+                    <div class="gemini-hero">
+                        <h2 class="gemini-title">Where should we start?</h2>
+                        <p class="gemini-subtitle">
+                            Hello <span id="welcome-user-name">Sarah Chen</span> • <span id="welcome-role-desc">Select an analytics question below or type your prompt</span>
+                        </p>
                     </div>
 
-                    <!-- Dynamic 2x2 Starter Cards Grid -->
-                    <div class="starter-cards-grid" id="starter-cards-grid">
+                    <!-- Interactive Gemini-Style Starters List -->
+                    <div class="gemini-starters-list" id="gemini-starters-list">
                         <!-- Rendered dynamically by JavaScript based on active role -->
                     </div>
                 </div>

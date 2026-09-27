@@ -547,22 +547,21 @@ async function deleteChatSession(sessionId) {
 }
 
 function renderStarters(role) {
-    const gridEl = document.getElementById("starter-cards-grid");
+    const listEl = document.getElementById("gemini-starters-list");
     const roleConfig = STARTERS_CONFIG[role] || STARTERS_CONFIG.ram;
 
-    if (gridEl) {
-        gridEl.innerHTML = roleConfig.map(s => `
-            <div class="starter-card" onclick="selectStarterPrompt('${escapeQuotes(s.prompt)}')">
-                <div class="starter-card-top">
-                    <div class="starter-card-icon-badge">${s.icon}</div>
-                    <span class="starter-card-title">${escapeHtml(s.title)}</span>
+    if (listEl) {
+        listEl.innerHTML = roleConfig.map(s => `
+            <button class="gemini-starter-item" onclick="selectStarterPrompt('${escapeQuotes(s.prompt)}')" title="Click to ask: ${escapeQuotes(s.prompt)}">
+                <div class="gemini-starter-left">
+                    <span class="starter-arrow-icon">↳</span>
+                    <span class="starter-theme-icon">${s.icon}</span>
+                    <span class="starter-query-text">${escapeHtml(s.prompt)}</span>
                 </div>
-                <div class="starter-card-prompt">${escapeHtml(s.desc)}</div>
-                <div class="starter-card-footer">
-                    <span class="starter-card-tag">Analytics</span>
-                    <span class="starter-card-arrow">Ask this ➔</span>
+                <div class="gemini-starter-right">
+                    <span class="starter-pill-badge">${escapeHtml(s.title)}</span>
                 </div>
-            </div>
+            </button>
         `).join('');
     }
 
@@ -592,14 +591,13 @@ function resetConversation() {
     const container = document.getElementById("chat-messages");
     container.innerHTML = `
         <div class="welcome-container" id="welcome-container">
-            <div class="welcome-hero">
-                <div class="welcome-avatar-icon">✨</div>
-                <div class="welcome-hero-text">
-                    <h2>Hello, <span id="welcome-user-name">${state.currentUser ? escapeHtml(state.currentUser.full_name) : "User"}</span>!</h2>
-                    <p class="welcome-role-desc" id="welcome-role-desc">Commercial Intelligence Assistant • Pick a quick analysis starter below or ask anything.</p>
-                </div>
+            <div class="gemini-hero">
+                <h2 class="gemini-title">Where should we start?</h2>
+                <p class="gemini-subtitle">
+                    Hello <span id="welcome-user-name">${state.currentUser ? escapeHtml(state.currentUser.full_name) : "User"}</span> • <span id="welcome-role-desc">Select an analytics question below or type your prompt</span>
+                </p>
             </div>
-            <div class="starter-cards-grid" id="starter-cards-grid"></div>
+            <div class="gemini-starters-list" id="gemini-starters-list"></div>
         </div>
     `;
     if (state.currentUser) {
