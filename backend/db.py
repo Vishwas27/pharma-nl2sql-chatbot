@@ -59,12 +59,17 @@ def init_database(force_reseed: bool = False) -> None:
             ddl_if_not_exists = SCHEMA_DDL.replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS ")
             conn.executescript(ddl_if_not_exists)
         
-        # Load seed data if available
+        # Load seed data if available, or load bundled seed_dump.sql
+        bundled_seed_dump = Path(__file__).parent / "seed_dump.sql"
         if seed_data_sql_path.exists():
             print("[DB] Loading seed_data.sql...")
             with open(seed_data_sql_path, "r", encoding="utf-8") as f:
                 seed_data_sql = f.read()
             conn.executescript(seed_data_sql)
+        elif bundled_seed_dump.exists():
+            print("[DB] Loading bundled production dataset seed_dump.sql...")
+            with open(bundled_seed_dump, "r", encoding="utf-8") as f:
+                conn.executescript(f.read())
             
         # Check if users exist or re-seed valid user territory mapping
         cursor.execute("SELECT COUNT(*) FROM users;")
