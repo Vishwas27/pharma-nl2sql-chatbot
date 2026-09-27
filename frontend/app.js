@@ -259,19 +259,6 @@ function setupEventListeners() {
         });
     }
 
-    // Top Header Persona Switcher
-    const headerUserSelect = document.getElementById("header-user-select");
-    if (headerUserSelect) {
-        headerUserSelect.addEventListener("change", (e) => {
-            const userId = e.target.value;
-            const user = state.users.find(u => u.user_id === userId);
-            if (user) {
-                loginUser(user);
-                showToast(`Switched persona to ${user.full_name} (${user.role.toUpperCase()})`);
-            }
-        });
-    }
-
     // Export Conversation Report Button
     const btnExport = document.getElementById("btn-export-report");
     if (btnExport) {
@@ -351,9 +338,7 @@ async function loadUsers() {
         state.users = await resp.json();
 
         const loginSelect = document.getElementById("login-user-select");
-        const headerSelect = document.getElementById("header-user-select");
         if (loginSelect) loginSelect.innerHTML = '<option value="" disabled selected>Select any representative...</option>';
-        if (headerSelect) headerSelect.innerHTML = '<option value="" disabled selected>Switch Persona...</option>';
 
         state.users.forEach(u => {
             const scopeDesc = u.role === "exec" ? "Global" : (u.role === "director" ? `${u.region_name} Region` : `${u.territory_name} Territory`);
@@ -364,12 +349,6 @@ async function loadUsers() {
                 opt1.value = u.user_id;
                 opt1.textContent = optText;
                 loginSelect.appendChild(opt1);
-            }
-            if (headerSelect) {
-                const opt2 = document.createElement("option");
-                opt2.value = u.user_id;
-                opt2.textContent = `${u.full_name} (${u.role.toUpperCase()})`;
-                headerSelect.appendChild(opt2);
             }
         });
     } catch (err) {
@@ -515,6 +494,8 @@ async function selectSession(sessionId) {
         const history = await resp.json();
 
         if (history && history.length > 0) {
+            const welcome = document.getElementById("welcome-container");
+            if (welcome) welcome.remove();
             history.forEach(msg => {
                 if (msg.role === "user") {
                     appendUserMessage(msg.content);
@@ -573,11 +554,14 @@ function renderStarters(role) {
         gridEl.innerHTML = roleConfig.map(s => `
             <div class="starter-card" onclick="selectStarterPrompt('${escapeQuotes(s.prompt)}')">
                 <div class="starter-card-top">
-                    <span class="starter-card-icon">${s.icon}</span>
+                    <div class="starter-card-icon-badge">${s.icon}</div>
                     <span class="starter-card-title">${escapeHtml(s.title)}</span>
                 </div>
                 <div class="starter-card-prompt">${escapeHtml(s.desc)}</div>
-                <div class="starter-card-arrow">Ask this ➔</div>
+                <div class="starter-card-footer">
+                    <span class="starter-card-tag">Analytics</span>
+                    <span class="starter-card-arrow">Ask this ➔</span>
+                </div>
             </div>
         `).join('');
     }
@@ -722,6 +706,8 @@ async function sendMessage(message) {
 }
 
 function appendUserMessage(text) {
+    const welcome = document.getElementById("welcome-container");
+    if (welcome) welcome.remove();
     const container = document.getElementById("chat-messages");
     const div = document.createElement("div");
     div.className = "message-wrapper user-wrapper";
@@ -961,8 +947,8 @@ function appendAssistantResponse(resp) {
                     <span class="timestamp">${getCurrentTime()}</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 6px;">
-                    <button class="btn-copy-action" onclick="copyToClipboard('${escapeQuotes(resp.explanation)}', this)" title="Copy Insight Summary">📋 Copy Insight</button>
-                    ${resp.sql ? `<button class="btn-copy-action" onclick="copyToClipboard('${escapeQuotes(resp.sql)}', this)" title="Copy SQL Query">💻 Copy SQL</button>` : ''}
+                    <button class="btn-copy-icon" onclick="copyToClipboard('${escapeQuotes(resp.explanation)}', this)" title="Copy Insight Summary">📋</button>
+                    ${resp.sql ? `<button class="btn-copy-icon" onclick="copyToClipboard('${escapeQuotes(resp.sql)}', this)" title="Copy SQL Query">💻</button>` : ''}
                 </div>
             </div>
             <div class="message-body">
