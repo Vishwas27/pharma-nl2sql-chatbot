@@ -174,15 +174,35 @@
         <main class="main-content">
             <!-- Top Header -->
             <header class="top-header">
-                <button id="mobile-menu-btn" class="mobile-menu-btn" title="Toggle Navigation Menu">
-                    <span>☰</span>
-                </button>
-                <div class="header-left">
-                    <h1 id="page-title">Commercial Analytics Assistant</h1>
-                    <p class="subtitle">Ask any question in plain English about sales, market share, accounts, or trends</p>
+                <div class="header-left-group">
+                    <button id="mobile-menu-btn" class="mobile-menu-btn" title="Toggle Navigation Menu">
+                        <span>☰</span>
+                    </button>
+                    <button id="btn-toggle-sidebar" class="icon-button desktop-sidebar-btn" title="Toggle Sidebar (Expand/Collapse)">
+                        <span>◧</span>
+                    </button>
+                    <div class="header-left">
+                        <h1 id="page-title">Commercial Analytics Assistant</h1>
+                        <p class="subtitle">Ask any question in plain English about sales, market share, accounts, or trends</p>
+                    </div>
                 </div>
+
                 <div class="header-right">
-                    <button class="btn-secondary" id="btn-clear-chat">
+                    <!-- Quick Persona Switcher in Header -->
+                    <div class="header-persona-select-wrap" title="Quick switch active user persona & RBAC scope">
+                        <span class="persona-select-icon">👤</span>
+                        <select id="header-user-select" class="header-user-select">
+                            <option value="" disabled selected>Switch Persona...</option>
+                        </select>
+                    </div>
+
+                    <!-- Export Report Button -->
+                    <button class="btn-secondary" id="btn-export-report" title="Export conversation report (Markdown/Print)">
+                        <span>📄</span> <span class="btn-text">Export</span>
+                    </button>
+
+                    <!-- Clear Chat Button -->
+                    <button class="btn-secondary" id="btn-clear-chat" title="Clear current conversation">
                         <span>🔄</span> <span class="btn-text">Clear</span>
                     </button>
                 </div>
@@ -199,24 +219,19 @@
 
             <!-- Chat Messages Container -->
             <div class="chat-container" id="chat-messages">
-                <!-- Welcome Message -->
-                <div class="message-wrapper assistant-wrapper">
-                    <div class="avatar assistant-avatar">✨</div>
-                    <div class="message-bubble assistant-bubble">
-                        <div class="message-header">
-                            <span class="sender-name">Pharma Analytics Bot</span>
-                            <span class="timestamp">Just now</span>
+                <!-- Welcome View with Interactive Quick-Start Cards -->
+                <div class="welcome-container" id="welcome-container">
+                    <div class="welcome-hero">
+                        <div class="welcome-avatar-icon">✨</div>
+                        <div class="welcome-hero-text">
+                            <h2>Hello, <span id="welcome-user-name">Sarah Chen</span>!</h2>
+                            <p class="welcome-role-desc" id="welcome-role-desc">Commercial Intelligence Assistant • Ask any natural language question or pick a quick starter below.</p>
                         </div>
-                        <div class="message-body">
-                            <p>Hello <strong id="welcome-user-name">Sarah Chen</strong>! I am your AI Commercial Analytics Assistant. You can ask me natural language questions such as:</p>
-                            <ul>
-                                <li><em>"What is our market share for Zenovax in Docetaxel?"</em></li>
-                                <li><em>"Show me our top 5 accounts by volume this quarter"</em></li>
-                                <li><em>"How has Carbotrel volume trended over the last 6 months?"</em></li>
-                                <li><em>"Give me a list of all products in our catalog"</em></li>
-                            </ul>
-                            <p class="hint-text">💡 Click any suggested question on the left or type your own question below.</p>
-                        </div>
+                    </div>
+
+                    <!-- Dynamic 2x2 Starter Cards Grid -->
+                    <div class="starter-cards-grid" id="starter-cards-grid">
+                        <!-- Rendered dynamically by JavaScript based on active role -->
                     </div>
                 </div>
             </div>
@@ -242,6 +257,9 @@
             </div>
         </main>
     </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
 
     <!-- Modal: Schema & Domain Glossary Explorer -->
     <div class="modal-overlay" id="schema-modal">

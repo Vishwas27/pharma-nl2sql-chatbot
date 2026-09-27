@@ -16,29 +16,92 @@ let state = {
     }
 };
 
-// Recommended Starters by Role (Clear, plain-English business analytics questions)
-const STARTERS_BY_ROLE = {
+// Rich Starter Prompts by Role (Clear, plain-English business analytics questions)
+const STARTERS_CONFIG = {
     exec: [
-        "What is our gross revenue and pack units this quarter by product?",
-        "What is our market share for Zenovax in the Docetaxel market?",
-        "Rank our top 10 accounts by total volume this quarter",
-        "Show 6-month monthly volume trend for all oncology products",
-        "Give me a list of all products in our catalog"
+        {
+            icon: "🏆",
+            title: "Top 10 Accounts",
+            desc: "Rank highest volume healthcare systems this quarter",
+            prompt: "Rank our top 10 accounts by total volume this quarter"
+        },
+        {
+            icon: "📊",
+            title: "Zenovax Market Share",
+            desc: "Docetaxel market share vs. commercial market competitors",
+            prompt: "What is our market share for Zenovax in the Docetaxel market?"
+        },
+        {
+            icon: "📈",
+            title: "6-Month Oncology Trend",
+            desc: "Monthly volume trends across key oncology brands",
+            prompt: "Show 6-month monthly volume trend for all oncology products"
+        },
+        {
+            icon: "💰",
+            title: "Gross Revenue by Product",
+            desc: "Quarterly WAC dollar revenue and total pack units",
+            prompt: "What is our gross revenue and pack units this quarter by product?"
+        }
     ],
     director: [
-        "Compare territory volumes across my region this quarter",
-        "What is our Docetaxel market share across territories in my region?",
-        "What are the top 5 accounts in my region by pack units?",
-        "Show monthly Zenovax volume trend for the last 6 months",
-        "Give me a list of all products in our catalog"
+        {
+            icon: "🗺️",
+            title: "Territory Comparison",
+            desc: "Compare pack units across territories in my region",
+            prompt: "Compare territory volumes across my region this quarter"
+        },
+        {
+            icon: "📊",
+            title: "Regional Market Share",
+            desc: "Docetaxel market share across regional territories",
+            prompt: "What is our Docetaxel market share across territories in my region?"
+        },
+        {
+            icon: "🏢",
+            title: "Top 5 Regional Accounts",
+            desc: "Rank leading facilities and IDNs in my region",
+            prompt: "What are the top 5 accounts in my region by pack units?"
+        },
+        {
+            icon: "📈",
+            title: "Zenovax Monthly Trend",
+            desc: "6-month volume trajectory in my assigned region",
+            prompt: "Show monthly Zenovax volume trend for the last 6 months"
+        }
     ],
     ram: [
-        "What are my top 5 accounts by pack units this quarter?",
-        "What is our market share for Zenovax in my territory?",
-        "Show monthly volume trend for Carbotrel over the last 6 months",
-        "What are my total sales in dollars?",
-        "Give me a list of all medicines in our portfolio"
+        {
+            icon: "🏢",
+            title: "My Top 5 Accounts",
+            desc: "Rank accounts by pack units in my territory",
+            prompt: "What are my top 5 accounts by pack units this quarter?"
+        },
+        {
+            icon: "📊",
+            title: "Territory Market Share",
+            desc: "Zenovax competitive market share in my territory",
+            prompt: "What is our market share for Zenovax in my territory?"
+        },
+        {
+            icon: "📈",
+            title: "Carbotrel 6-Month Trend",
+            desc: "Track monthly volume progression for Carbotrel",
+            prompt: "Show monthly volume trend for Carbotrel over the last 6 months"
+        },
+        {
+            icon: "💊",
+            title: "Portfolio Catalog",
+            desc: "Browse all medicines and therapeutic categories",
+            prompt: "Give me a list of all products in our catalog"
+        }
     ]
+};
+
+const STARTERS_BY_ROLE = {
+    exec: STARTERS_CONFIG.exec.map(s => s.prompt),
+    director: STARTERS_CONFIG.director.map(s => s.prompt),
+    ram: STARTERS_CONFIG.ram.map(s => s.prompt)
 };
 
 // Initialize Application
@@ -185,6 +248,38 @@ function setupEventListeners() {
         }
     });
 
+    // Desktop Sidebar collapse toggle
+    const toggleSidebarBtn = document.getElementById("btn-toggle-sidebar");
+    if (toggleSidebarBtn) {
+        toggleSidebarBtn.addEventListener("click", () => {
+            const layout = document.querySelector(".app-layout");
+            if (layout) {
+                layout.classList.toggle("sidebar-collapsed");
+            }
+        });
+    }
+
+    // Top Header Persona Switcher
+    const headerUserSelect = document.getElementById("header-user-select");
+    if (headerUserSelect) {
+        headerUserSelect.addEventListener("change", (e) => {
+            const userId = e.target.value;
+            const user = state.users.find(u => u.user_id === userId);
+            if (user) {
+                loginUser(user);
+                showToast(`Switched persona to ${user.full_name} (${user.role.toUpperCase()})`);
+            }
+        });
+    }
+
+    // Export Conversation Report Button
+    const btnExport = document.getElementById("btn-export-report");
+    if (btnExport) {
+        btnExport.addEventListener("click", () => {
+            exportChatReport();
+        });
+    }
+
     // Clear conversation
     document.getElementById("btn-clear-chat").addEventListener("click", () => {
         resetConversation();
@@ -231,7 +326,7 @@ function setupEventListeners() {
         localStorage.setItem("nova_api_key", apiKey);
         closeModal("settings-modal");
         hideModelBanner();
-        alert("AI Engine settings saved successfully!");
+        showToast("AI Engine settings saved successfully!");
     });
 
     // Modal tabs
@@ -256,14 +351,26 @@ async function loadUsers() {
         state.users = await resp.json();
 
         const loginSelect = document.getElementById("login-user-select");
-        loginSelect.innerHTML = '<option value="" disabled selected>Select any representative...</option>';
+        const headerSelect = document.getElementById("header-user-select");
+        if (loginSelect) loginSelect.innerHTML = '<option value="" disabled selected>Select any representative...</option>';
+        if (headerSelect) headerSelect.innerHTML = '<option value="" disabled selected>Switch Persona...</option>';
 
         state.users.forEach(u => {
-            const opt = document.createElement("option");
-            opt.value = u.user_id;
             const scopeDesc = u.role === "exec" ? "Global" : (u.role === "director" ? `${u.region_name} Region` : `${u.territory_name} Territory`);
-            opt.textContent = `${u.full_name} (${u.role.toUpperCase()} — ${scopeDesc})`;
-            loginSelect.appendChild(opt);
+            const optText = `${u.full_name} (${u.role.toUpperCase()} — ${scopeDesc})`;
+            
+            if (loginSelect) {
+                const opt1 = document.createElement("option");
+                opt1.value = u.user_id;
+                opt1.textContent = optText;
+                loginSelect.appendChild(opt1);
+            }
+            if (headerSelect) {
+                const opt2 = document.createElement("option");
+                opt2.value = u.user_id;
+                opt2.textContent = `${u.full_name} (${u.role.toUpperCase()})`;
+                headerSelect.appendChild(opt2);
+            }
         });
     } catch (err) {
         console.error("Error loading users:", err);
@@ -281,6 +388,10 @@ async function loginUser(user) {
     if (!user) return;
     state.currentUser = user;
     sessionStorage.setItem("nova_active_user", user.user_id);
+
+    // Sync header persona dropdown
+    const headerSelect = document.getElementById("header-user-select");
+    if (headerSelect) headerSelect.value = user.user_id;
 
     // Update UI profile
     const nameEl = document.getElementById("active-user-name");
@@ -455,40 +566,61 @@ async function deleteChatSession(sessionId) {
 }
 
 function renderStarters(role) {
-    const container = document.getElementById("starters-container");
-    if (!container) return;
-    container.innerHTML = "";
-    const list = STARTERS_BY_ROLE[role] || STARTERS_BY_ROLE.ram;
+    const gridEl = document.getElementById("starter-cards-grid");
+    const roleConfig = STARTERS_CONFIG[role] || STARTERS_CONFIG.ram;
 
-    list.forEach(promptText => {
-        const chip = document.createElement("button");
-        chip.className = "starter-chip";
-        chip.textContent = promptText;
-        chip.addEventListener("click", () => {
-            document.getElementById("chat-input").value = promptText;
-            document.getElementById("chat-form").dispatchEvent(new Event("submit"));
-        });
-        container.appendChild(chip);
-    });
+    if (gridEl) {
+        gridEl.innerHTML = roleConfig.map(s => `
+            <div class="starter-card" onclick="selectStarterPrompt('${escapeQuotes(s.prompt)}')">
+                <div class="starter-card-top">
+                    <span class="starter-card-icon">${s.icon}</span>
+                    <span class="starter-card-title">${escapeHtml(s.title)}</span>
+                </div>
+                <div class="starter-card-prompt">${escapeHtml(s.desc)}</div>
+                <div class="starter-card-arrow">Ask this ➔</div>
+            </div>
+        `).join('');
+    }
+
+    const descEl = document.getElementById("welcome-role-desc");
+    if (descEl && state.currentUser) {
+        const u = state.currentUser;
+        if (u.role === "exec") {
+            descEl.textContent = "Global Access • Full Commercial Revenue (WAC) & Portfolio Market Share Analytics";
+        } else if (u.role === "director") {
+            descEl.textContent = `${u.region_name} Region • Regional Multi-Territory Volume & Account Analytics`;
+        } else {
+            descEl.textContent = `${u.territory_name} Territory • Field Representative Commercial Analytics`;
+        }
+    }
+}
+
+function selectStarterPrompt(promptText) {
+    const input = document.getElementById("chat-input");
+    if (input) {
+        input.value = promptText;
+        document.getElementById("chat-form").dispatchEvent(new Event("submit"));
+    }
 }
 
 function resetConversation() {
     state.conversationHistory = [];
     const container = document.getElementById("chat-messages");
     container.innerHTML = `
-        <div class="message-wrapper assistant-wrapper">
-            <div class="avatar assistant-avatar">✨</div>
-            <div class="message-bubble assistant-bubble">
-                <div class="message-header">
-                    <span class="sender-name">Pharma Analytics Bot</span>
-                    <span class="timestamp">Just now</span>
-                </div>
-                <div class="message-body">
-                    <p>Hello <strong>${state.currentUser ? state.currentUser.full_name : "User"}</strong>! What commercial analytics or portfolio questions can I assist you with today?</p>
+        <div class="welcome-container" id="welcome-container">
+            <div class="welcome-hero">
+                <div class="welcome-avatar-icon">✨</div>
+                <div class="welcome-hero-text">
+                    <h2>Hello, <span id="welcome-user-name">${state.currentUser ? escapeHtml(state.currentUser.full_name) : "User"}</span>!</h2>
+                    <p class="welcome-role-desc" id="welcome-role-desc">Commercial Intelligence Assistant • Pick a quick analysis starter below or ask anything.</p>
                 </div>
             </div>
+            <div class="starter-cards-grid" id="starter-cards-grid"></div>
         </div>
     `;
+    if (state.currentUser) {
+        renderStarters(state.currentUser.role);
+    }
 }
 
 function showModelBanner(message) {
@@ -504,6 +636,10 @@ function hideModelBanner() {
 
 async function sendMessage(message) {
     if (!state.currentUser) return;
+
+    // Remove welcome banner on first message
+    const welcome = document.getElementById("welcome-container");
+    if (welcome) welcome.remove();
 
     // Append User Message to UI
     appendUserMessage(message);
@@ -646,7 +782,65 @@ function appendAssistantResponse(resp) {
         `;
     }
 
-    // 2. Visual Chart (If numerical metrics available)
+    // 2. KPI Summary Badges above charts & tables
+    let kpiHtml = "";
+    if (resp.data && resp.data.rows && resp.data.rows.length > 0) {
+        const rows = resp.data.rows;
+        const cols = resp.data.columns;
+        let volSum = 0;
+        let hasVol = false;
+        let marketShareVal = null;
+
+        cols.forEach(c => {
+            const clower = c.toLowerCase();
+            if (clower.includes("unit") || clower.includes("volume") || clower.includes("pack") || clower.includes("brand_eq")) {
+                volSum = rows.reduce((acc, r) => acc + (parseFloat(r[c]) || 0), 0);
+                hasVol = true;
+            }
+            if (clower.includes("pct") || clower.includes("share") || clower.includes("market_share")) {
+                if (rows.length > 0 && rows[0][c] !== undefined) {
+                    marketShareVal = rows[0][c];
+                }
+            }
+        });
+
+        kpiHtml = `
+            <div class="kpi-metrics-grid">
+                <div class="kpi-card">
+                    <span class="kpi-card-icon">📋</span>
+                    <div class="kpi-card-content">
+                        <span class="kpi-card-value">${resp.data.row_count}</span>
+                        <span class="kpi-card-label">Records</span>
+                    </div>
+                </div>
+                ${hasVol && volSum > 0 ? `
+                <div class="kpi-card">
+                    <span class="kpi-card-icon">📦</span>
+                    <div class="kpi-card-content">
+                        <span class="kpi-card-value">${volSum >= 1000 ? volSum.toLocaleString(undefined, {maximumFractionDigits:1}) : volSum.toFixed(0)}</span>
+                        <span class="kpi-card-label">Total Volume</span>
+                    </div>
+                </div>` : ''}
+                ${marketShareVal !== null ? `
+                <div class="kpi-card">
+                    <span class="kpi-card-icon">📊</span>
+                    <div class="kpi-card-content">
+                        <span class="kpi-card-value">${formatCellValue(marketShareVal)}%</span>
+                        <span class="kpi-card-label">Market Share</span>
+                    </div>
+                </div>` : ''}
+                <div class="kpi-card">
+                    <span class="kpi-card-icon">⚡</span>
+                    <div class="kpi-card-content">
+                        <span class="kpi-card-value">${resp.data.execution_time_ms}ms</span>
+                        <span class="kpi-card-label">Engine Latency</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // 3. Visual Chart (If numerical metrics available)
     if (resp.data && resp.data.rows && resp.data.rows.length > 0 && resp.chart && resp.chart.chart_type !== "none" && resp.chart.chart_type !== "table") {
         const canvasId = `chart-${msgId}`;
         cardsHtml += `
@@ -662,7 +856,7 @@ function appendAssistantResponse(resp) {
         `;
     }
 
-    // 3. Tabular Data Presentation (Clean, human-readable)
+    // 4. Tabular Data Presentation (Clean, human-readable)
     if (resp.data && resp.data.rows && resp.data.rows.length > 0) {
         const tableId = `table-${msgId}`;
         cardsHtml += `
@@ -694,7 +888,7 @@ function appendAssistantResponse(resp) {
         `;
     }
 
-    // 4. RAG Knowledge Layer Sources (Collapsible)
+    // 5. RAG Knowledge Layer Sources (Collapsible)
     let ragSourcesHtml = "";
     if (resp.rag_sources && resp.rag_sources.length > 0) {
         ragSourcesHtml = `
@@ -718,7 +912,7 @@ function appendAssistantResponse(resp) {
         `;
     }
 
-    // 5. Multi-Agent Execution Trace (Collapsible)
+    // 6. Multi-Agent Execution Trace (Collapsible)
     let tracesHtml = "";
     if (resp.traces && resp.traces.length > 0) {
         const totalTraceMs = resp.traces.reduce((acc, t) => acc + (t.latency_ms || 0), 0);
@@ -746,7 +940,7 @@ function appendAssistantResponse(resp) {
         `;
     }
 
-    // 6. Follow-up Suggestions
+    // 7. Follow-up Suggestions
     let suggestionsHtml = "";
     if (resp.suggestions && resp.suggestions.length > 0) {
         suggestionsHtml = `
@@ -762,11 +956,18 @@ function appendAssistantResponse(resp) {
         <div class="avatar assistant-avatar">✨</div>
         <div class="message-bubble assistant-bubble">
             <div class="message-header">
-                <span class="sender-name">Pharma Analytics Bot</span>
-                <span class="timestamp">${getCurrentTime()}</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="sender-name">Pharma Analytics Bot</span>
+                    <span class="timestamp">${getCurrentTime()}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <button class="btn-copy-action" onclick="copyToClipboard('${escapeQuotes(resp.explanation)}', this)" title="Copy Insight Summary">📋 Copy Insight</button>
+                    ${resp.sql ? `<button class="btn-copy-action" onclick="copyToClipboard('${escapeQuotes(resp.sql)}', this)" title="Copy SQL Query">💻 Copy SQL</button>` : ''}
+                </div>
             </div>
             <div class="message-body">
                 <p>${formatMarkdownText(resp.explanation)}</p>
+                ${kpiHtml}
                 ${cardsHtml}
                 ${ragSourcesHtml}
                 ${tracesHtml}
@@ -1003,9 +1204,75 @@ function exportTableToCSV(tableId) {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `novapharma_export_${Date.now()}.csv`);
+    link.setAttribute("download", `pharma_export_${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    showToast("Data table exported as CSV!");
+}
+
+function showToast(message) {
+    const container = document.getElementById("toast-container");
+    if (!container) return;
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.innerHTML = `<span>✓</span> <span>${escapeHtml(message)}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateY(8px)";
+        toast.style.transition = "all 0.3s ease";
+        setTimeout(() => toast.remove(), 300);
+    }, 2400);
+}
+
+function copyToClipboard(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+        showToast("Copied to clipboard!");
+        if (btn) {
+            const orig = btn.innerHTML;
+            btn.innerHTML = "✓ Copied";
+            setTimeout(() => { btn.innerHTML = orig; }, 1600);
+        }
+    }).catch(err => {
+        console.error("Clipboard copy failed", err);
+    });
+}
+
+function exportChatReport() {
+    if (!state.conversationHistory || state.conversationHistory.length === 0) {
+        alert("No conversation data to export yet. Ask some commercial questions first!");
+        return;
+    }
+
+    const u = state.currentUser || { full_name: "Representative", role: "Unknown", territory_name: "Global" };
+    const dateStr = new Date().toLocaleString();
+
+    let md = `# Pharma Commercial Intelligence Analytics Report\n`;
+    md += `**Generated For:** ${u.full_name} (${u.role.toUpperCase()})\n`;
+    md += `**Scope:** ${u.territory_name || u.region_name || 'Global'}\n`;
+    md += `**Generated At:** ${dateStr}\n\n`;
+    md += `---\n\n`;
+
+    state.conversationHistory.forEach((msg, idx) => {
+        if (msg.role === "user") {
+            md += `### 👤 Question ${Math.floor(idx/2)+1}: ${msg.content}\n\n`;
+        } else {
+            md += `**🤖 Commercial Insight:**\n${msg.content}\n\n`;
+            if (msg.sql) {
+                md += `\`\`\`sql\n${msg.sql}\n\`\`\`\n\n`;
+            }
+            md += `---\n\n`;
+        }
+    });
+
+    const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Pharma_Analytics_Report_${Date.now()}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast("Analytics report downloaded successfully!");
 }
 
