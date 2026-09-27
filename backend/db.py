@@ -11,8 +11,11 @@ from typing import List, Dict, Any, Tuple
 
 # Base paths
 BASE_DIR = Path(__file__).parent.parent
-ASSIGNMENT_DIR = BASE_DIR / "nl2sql-assignment-main" / "nl2sql-assignment-main"
-SCHEMA_DIR = ASSIGNMENT_DIR / "schema"
+# Look for schema files in project root schema/ or fallback paths
+SCHEMA_DIR = BASE_DIR / "schema"
+if not SCHEMA_DIR.exists():
+    SCHEMA_DIR = BASE_DIR / "nl2sql-assignment-main" / "nl2sql-assignment-main" / "schema"
+
 DB_PATH = BASE_DIR / "pharma.db"
 
 
@@ -32,9 +35,6 @@ def init_database(force_reseed: bool = False) -> None:
     create_tables_sql_path = SCHEMA_DIR / "create_tables.sql"
     seed_data_sql_path = SCHEMA_DIR / "seed_data.sql"
     
-    if not create_tables_sql_path.exists():
-        raise FileNotFoundError(f"Cannot find create_tables.sql at {create_tables_sql_path}")
-    
     conn = get_db_connection()
     cursor = conn.cursor()
     
@@ -49,11 +49,15 @@ def init_database(force_reseed: bool = False) -> None:
         
     if not sales_table_exists or sales_count == 0 or force_reseed:
         print("[DB] Initializing schema and seeding database...")
-        with open(create_tables_sql_path, "r", encoding="utf-8") as f:
-            create_tables_sql = f.read()
-        conn.executescript(create_tables_sql)
+        if create_tables_sql_path.exists():
+            with open(create_tables_sql_path, "r", encoding="utf-8") as f:
+                create_tables_sql = f.read()
+            conn.executescript(create_tables_sql)
+        else:
+            from backend.domain_knowledge import SCHEMA_DDL
+            conn.executescript(SCHEMA_DDL)
         
-        # Load seed data
+        # Load seed data if available
         if seed_data_sql_path.exists():
             print("[DB] Loading seed_data.sql...")
             with open(seed_data_sql_path, "r", encoding="utf-8") as f:
