@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,11 +8,14 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
     <!-- Chart.js for data visualizations -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="/static/style.css">
 </head>
+
 <body class="theme-dark">
 
     <!-- ========================================== -->
@@ -180,13 +184,15 @@
                     </button>
                     <div class="header-left">
                         <h1 id="page-title">Commercial Analytics Assistant</h1>
-                        <p class="subtitle">Ask any question in plain English about sales, market share, accounts, or trends</p>
+                        <p class="subtitle">Ask any question in plain English about sales, market share, accounts, or
+                            trends</p>
                     </div>
                 </div>
 
                 <div class="header-right">
                     <!-- Export Report Button -->
-                    <button class="btn-secondary" id="btn-export-report" title="Export conversation report (Markdown/Print)">
+                    <button class="btn-secondary" id="btn-export-report"
+                        title="Export conversation report (Markdown/Print)">
                         <span>📄</span> <span class="btn-text">Export</span>
                     </button>
 
@@ -213,7 +219,8 @@
                     <div class="gemini-hero">
                         <h2 class="gemini-title">Where should we start?</h2>
                         <p class="gemini-subtitle">
-                            Hello <span id="welcome-user-name">Sarah Chen</span> • <span id="welcome-role-desc">Select an analytics question below or type your prompt</span>
+                            Hello <span id="welcome-user-name">Sarah Chen</span> • <span id="welcome-role-desc">Select
+                                an analytics question below or type your prompt</span>
                         </p>
                     </div>
 
@@ -228,12 +235,9 @@
             <div class="input-area">
                 <form id="chat-form" class="chat-input-form">
                     <div class="input-wrapper">
-                        <textarea 
-                            id="chat-input" 
-                            placeholder="Ask a commercial question (e.g., 'What are our top performing products this quarter?')..." 
-                            rows="1"
-                            required
-                        ></textarea>
+                        <textarea id="chat-input"
+                            placeholder="Ask a commercial question (e.g., 'What are our top performing products this quarter?')..."
+                            rows="1" required></textarea>
                         <button type="submit" id="send-btn" class="btn-send" title="Send Message">
                             <span class="send-icon">➤</span>
                         </button>
@@ -286,12 +290,14 @@
                     </div>
                     <div class="glossary-item">
                         <h4>Equivalents</h4>
-                        <p>Converts raw pack units into standardized dosing units so different package sizes can be compared.</p>
+                        <p>Converts raw pack units into standardized dosing units so different package sizes can be
+                            compared.</p>
                         <code>Equivalents = Pack Units × Unit Conversion Factor</code>
                     </div>
                     <div class="glossary-item">
                         <h4>Rolling Periods</h4>
-                        <p>Standard analytical windows: <strong>R3M</strong> (Rolling 3 Months) and <strong>R6M</strong> (Prior 3 Months comparison).</p>
+                        <p>Standard analytical windows: <strong>R3M</strong> (Rolling 3 Months) and <strong>R6M</strong>
+                            (Prior 3 Months comparison).</p>
                     </div>
                 </div>
                 <div class="tab-content" id="tab-schema">
@@ -320,8 +326,10 @@
                 </div>
                 <div class="form-group" id="api-key-group">
                     <label for="api-key-input">API Key</label>
-                    <input type="password" id="api-key-input" class="form-input" placeholder="Paste your API Key here...">
-                    <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 4px;">Leave blank to use the server environment default key.</small>
+                    <input type="password" id="api-key-input" class="form-input"
+                        placeholder="Paste your API Key here...">
+                    <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 4px;">Leave blank to use the
+                        server environment default key.</small>
                 </div>
                 <button class="btn-primary" id="btn-save-settings">Save & Apply</button>
             </div>
@@ -341,7 +349,8 @@
             </div>
             <div class="modal-body" style="padding: 16px;">
                 <div id="logs-container" class="logs-stream-container">
-                    <div style="text-align: center; color: var(--text-muted); padding: 20px;">Loading interaction logs...</div>
+                    <div style="text-align: center; color: var(--text-muted); padding: 20px;">Loading interaction
+                        logs...</div>
                 </div>
             </div>
         </div>
@@ -349,4 +358,5 @@
 
     <script src="/static/app.js"></script>
 </body>
+
 </html>

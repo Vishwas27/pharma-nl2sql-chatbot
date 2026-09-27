@@ -674,36 +674,39 @@ body.theme-light .gemini-title {
 
 /* Gemini Starters List */
 .gemini-starters-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px;
     width: 100%;
-    max-width: 680px;
+    max-width: 700px;
+    margin: 0 auto;
 }
 
 .gemini-starter-item {
-    display: flex;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    display: flex !important;
     align-items: center;
     justify-content: space-between;
-    width: 100%;
-    padding: 12px 20px;
+    width: 100% !important;
+    padding: 14px 22px;
     border-radius: 28px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
     cursor: pointer;
     text-align: left;
+    font-family: inherit;
     transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 body.theme-dark .gemini-starter-item {
-    background: rgba(30, 41, 59, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(30, 41, 59, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 body.theme-light .gemini-starter-item {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
 }
 
 .gemini-starter-item:hover {
@@ -711,15 +714,15 @@ body.theme-light .gemini-starter-item {
 }
 
 body.theme-dark .gemini-starter-item:hover {
-    background: rgba(99, 102, 241, 0.14);
-    border-color: rgba(129, 140, 248, 0.6);
-    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2);
+    background: rgba(99, 102, 241, 0.15) !important;
+    border-color: rgba(129, 140, 248, 0.6) !important;
+    box-shadow: 0 4px 22px rgba(99, 102, 241, 0.22) !important;
 }
 
 body.theme-light .gemini-starter-item:hover {
-    background: #f1f5f9;
-    border-color: #6366f1;
-    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.12);
+    background: #f8fafc !important;
+    border-color: #6366f1 !important;
+    box-shadow: 0 4px 18px rgba(99, 102, 241, 0.12) !important;
 }
 
 .gemini-starter-item:active {
@@ -729,7 +732,7 @@ body.theme-light .gemini-starter-item:hover {
 .gemini-starter-left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     flex: 1;
     min-width: 0;
 }
@@ -744,7 +747,7 @@ body.theme-light .gemini-starter-item:hover {
 
 .gemini-starter-item:hover .starter-arrow-icon {
     color: var(--accent-primary);
-    transform: translateX(3px);
+    transform: translateX(4px);
 }
 
 .starter-theme-icon {
@@ -763,27 +766,41 @@ body.theme-light .gemini-starter-item:hover {
     text-overflow: ellipsis;
 }
 
+body.theme-light .starter-query-text {
+    color: #334155;
+}
+
+body.theme-dark .starter-query-text {
+    color: #e2e8f0;
+}
+
 .gemini-starter-item:hover .starter-query-text {
-    color: var(--text-primary);
+    color: var(--accent-primary) !important;
 }
 
 .gemini-starter-right {
     display: flex;
     align-items: center;
-    margin-left: 12px;
+    margin-left: 14px;
     flex-shrink: 0;
 }
 
 .starter-pill-badge {
     font-size: 0.72rem;
     font-weight: 600;
-    padding: 3px 10px;
+    padding: 4px 12px;
     border-radius: 20px;
     background: rgba(99, 102, 241, 0.1);
     color: #818cf8;
     border: 1px solid rgba(99, 102, 241, 0.25);
     letter-spacing: 0.02em;
     transition: all 0.2s ease;
+}
+
+body.theme-light .starter-pill-badge {
+    background: rgba(99, 102, 241, 0.08);
+    color: #4f46e5;
+    border: 1px solid rgba(99, 102, 241, 0.2);
 }
 
 .gemini-starter-item:hover .starter-pill-badge {
@@ -800,7 +817,7 @@ body.theme-light .gemini-starter-item:hover {
         display: none;
     }
     .gemini-starter-item {
-        padding: 10px 14px;
+        padding: 11px 16px;
         border-radius: 20px;
     }
     .starter-query-text {

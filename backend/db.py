@@ -21,7 +21,7 @@ DB_PATH = BASE_DIR / "pharma.db"
 
 def get_db_connection() -> sqlite3.Connection:
     """Create a configured SQLite database connection with row factory."""
-    conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
+    conn = sqlite3.connect(str(DB_PATH), timeout=30.0, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     # Enable WAL mode and performance pragmas
     conn.execute("PRAGMA journal_mode = WAL;")
