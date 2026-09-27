@@ -1411,3 +1411,145 @@ kbd {
     font-size: 0.78rem;
     border: 1px solid rgba(239, 68, 68, 0.25);
 }
+
+/* ==========================================================================
+   SESSION HISTORY PANEL (ChatGPT-style sidebar)
+   ========================================================================== */
+
+.sessions-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    margin-top: 4px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 12px;
+}
+
+.sessions-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4px 8px 4px;
+}
+
+.btn-new-chat {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--accent-gradient);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 5px 10px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+    white-space: nowrap;
+}
+
+.btn-new-chat:hover {
+    opacity: 0.88;
+    transform: scale(1.04);
+}
+
+.sessions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    padding-bottom: 8px;
+}
+
+.session-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s;
+    border: 1px solid transparent;
+    position: relative;
+    group: true;
+}
+
+.session-item:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-color);
+}
+
+.session-item.active {
+    background: rgba(99, 102, 241, 0.12);
+    border-color: var(--border-highlight);
+}
+
+.session-icon {
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    opacity: 0.7;
+}
+
+.session-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.session-name {
+    font-size: 0.76rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
+
+.session-meta {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.session-actions {
+    display: none;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.session-item:hover .session-actions {
+    display: flex;
+}
+
+.session-action-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 3px 5px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    line-height: 1;
+    transition: background 0.15s, color 0.15s;
+}
+
+.session-action-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.session-action-btn.delete:hover {
+    color: var(--danger);
+}
+
+.session-empty-hint {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    padding: 16px 8px;
+    line-height: 1.5;
+}
+

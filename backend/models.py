@@ -15,6 +15,7 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     user_id: str = Field(..., description="User ID or email (e.g. 'U001', 'sarah.chen@novapharma.com')")
     message: str = Field(..., description="Natural language question from user")
+    session_id: Optional[str] = Field(default=None, description="Persistent session ID for multi-turn continuity")
     conversation_history: Optional[List[ChatMessage]] = Field(default_factory=list, description="Previous messages for multi-turn context")
     api_provider: Optional[str] = Field(default=None, description="Optional override: 'gemini', 'openai', 'groq', 'offline'")
     api_key: Optional[str] = Field(default=None, description="Optional runtime API key")
@@ -39,10 +40,11 @@ class ChatResponse(BaseModel):
     user_id: str
     user_name: str
     user_role: str
+    session_id: Optional[str] = None
     territory: Optional[str] = None
     region: Optional[str] = None
     can_view_wac: bool
-    
+
     question: str
     sql: Optional[str] = None
     explanation: str
@@ -53,3 +55,13 @@ class ChatResponse(BaseModel):
     traces: List[Dict[str, Any]] = Field(default_factory=list, description="Multi-Agent runtime execution trace")
     security_notice: Optional[str] = None
     error: Optional[str] = None
+
+
+class SessionInfo(BaseModel):
+    session_id: str
+    user_id: str
+    session_name: str
+    created_at: str
+    updated_at: str
+    message_count: int = 0
+

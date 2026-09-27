@@ -142,11 +142,17 @@
                 </button>
             </div>
 
-            <!-- Quick Starters tailored by role -->
-            <div class="starters-section">
-                <div class="menu-heading">SUGGESTED QUESTIONS</div>
-                <div class="starters-list" id="starters-container">
-                    <!-- Populated dynamically based on user role -->
+            <!-- ===== ChatGPT-Style Session History Panel ===== -->
+            <div class="sessions-panel">
+                <div class="sessions-header">
+                    <span class="menu-heading" style="margin-bottom:0;">CONVERSATIONS</span>
+                    <button class="btn-new-chat" id="btn-new-chat" title="Start a new conversation">
+                        <span>＋ New Chat</span>
+                    </button>
+                </div>
+                <div class="sessions-list" id="sessions-list">
+                    <!-- Populated dynamically per logged-in user -->
+                    <div class="session-empty-hint">No conversations yet. Ask your first question!</div>
                 </div>
             </div>
 
@@ -159,6 +165,7 @@
                 <button id="theme-toggle-btn" class="icon-button" title="Toggle Dark/Light Mode">🌓</button>
             </div>
         </aside>
+
 
         <!-- Main Chat Area -->
         <main class="main-content">

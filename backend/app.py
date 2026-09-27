@@ -1,9 +1,10 @@
 """
 FastAPI Backend Application for Pharma Analytics Bot (Commercial Intelligence AI).
-Provides RESTful APIs for chat, user switching, schema exploration, and static web UI.
+Provides RESTful APIs for chat, user switching, session management, schema exploration, and static web UI.
 """
 
 import os
+import json
 import time
 from pathlib import Path
 from typing import List, Dict, Any, Optional
@@ -12,9 +13,14 @@ from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
+from pydantic import BaseModel
 
-from backend.db import init_database, execute_query, get_user_by_id_or_email, get_all_users
-from backend.models import ChatRequest, ChatResponse, QueryResult, ChartConfig
+from backend.db import (
+    init_database, execute_query, get_user_by_id_or_email, get_all_users,
+    init_session_tables, create_session, get_user_sessions, get_session_history,
+    save_message, rename_session, delete_session, auto_name_session
+)
+from backend.models import ChatRequest, ChatResponse, QueryResult, ChartConfig, SessionInfo
 from backend.security import validate_and_sanitize_sql, filter_response_data
 from backend.llm_engine import LLMEngine
 from backend.domain_knowledge import NOVAPHARMA_PRODUCTS, SCHEMA_DDL, DOMAIN_RULES
@@ -22,13 +28,14 @@ from backend.logger import log_interaction, get_recent_logs, clear_logs
 
 from backend.agent_harness import agent_harness
 
-# Ensure database is initialized
+# Initialize database tables including session state tables
 init_database()
+init_session_tables()
 
 app = FastAPI(
     title="Pharma Analytics Bot",
-    description="Enterprise NL-to-SQL conversational commercial intelligence assistant with multi-source domain reasoning, multi-agent harness, and RBAC security.",
-    version="1.0.0"
+    description="Enterprise NL-to-SQL conversational commercial intelligence assistant with multi-source domain reasoning, multi-agent harness, RBAC security, and persistent multi-user session state.",
+    version="2.0.0"
 )
 
 # Enable CORS for local development and integration
@@ -44,6 +51,10 @@ llm_engine = LLMEngine()
 FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
 
 
+# ====================================================================
+# HEALTH & DIAGNOSTICS
+# ====================================================================
+
 @app.get("/api/health")
 def health_check():
     """Healthcheck endpoint returning database and engine status."""
@@ -58,6 +69,10 @@ def health_check():
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "unhealthy", "error": str(e)})
 
+
+# ====================================================================
+# USER MANAGEMENT
+# ====================================================================
 
 @app.get("/api/users")
 def list_users():
@@ -104,18 +119,99 @@ def get_schema_metadata():
     }
 
 
+# ====================================================================
+# SESSION STATE MANAGEMENT
+# ====================================================================
+
+@app.post("/api/sessions")
+def create_new_session(user_id: str):
+    """Create a new isolated chat session for a user. Returns session_id."""
+    user = get_user_by_id_or_email(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail=f"User '{user_id}' not found.")
+    session = create_session(user_id=user_id, session_name="New Chat")
+    return session
+
+
+@app.get("/api/sessions/{user_id}")
+def list_user_sessions(user_id: str):
+    """List all chat sessions for a user (newest first, with message count)."""
+    user = get_user_by_id_or_email(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail=f"User '{user_id}' not found.")
+    return get_user_sessions(user_id)
+
+
+@app.get("/api/sessions/{session_id}/messages")
+def get_session_messages(session_id: str):
+    """Load full message history of a session for restoring conversation UI."""
+    messages = get_session_history(session_id)
+    return messages
+
+
+@app.patch("/api/sessions/{session_id}/rename")
+def rename_session_endpoint(session_id: str, name: str):
+    """Rename a session."""
+    ok = rename_session(session_id, name)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Session not found.")
+    return {"status": "renamed", "session_id": session_id, "new_name": name}
+
+
+@app.delete("/api/sessions/{session_id}")
+def delete_session_endpoint(session_id: str):
+    """Delete a session and all its messages."""
+    ok = delete_session(session_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Session not found.")
+    return {"status": "deleted", "session_id": session_id}
+
+
+# ====================================================================
+# MAIN CHAT ENDPOINT (Session-Aware)
+# ====================================================================
+
 @app.post("/api/chat", response_model=ChatResponse)
 def handle_chat_query(req: ChatRequest):
     """
     Main Conversational NL-to-SQL endpoint driven by the Multi-Agent Harness.
+    Supports persistent session state: loads history from DB if session_id is provided.
     Orchestrates Supervisor, SQL Architect, Security Guardrail, DB Reflexion, and Executive Insights agents.
     """
     user = get_user_by_id_or_email(req.user_id)
     if not user:
         raise HTTPException(status_code=404, detail=f"User '{req.user_id}' not found in system.")
 
-    history_dicts = [{"role": m.role, "content": m.content, "sql": m.sql} for m in (req.conversation_history or [])]
+    # ---- Session State: Load or create session ----
+    session_id = req.session_id
+    is_new_session = False
+    if session_id:
+        # Load persistent history from DB (overrides any history sent from frontend)
+        db_history = get_session_history(session_id)
+        history_dicts = [
+            {"role": m["role"], "content": m["content"], "sql": m.get("sql_query")}
+            for m in db_history
+        ]
+    else:
+        # No session_id: create a new session now
+        new_session = create_session(user_id=user["user_id"])
+        session_id = new_session["session_id"]
+        is_new_session = True
+        history_dicts = [{"role": m.role, "content": m.content, "sql": m.sql} for m in (req.conversation_history or [])]
 
+    # Persist the user's message immediately
+    save_message(
+        session_id=session_id,
+        user_id=user["user_id"],
+        role="user",
+        content=req.message
+    )
+
+    # Auto-name the session after first user message
+    if is_new_session or len(history_dicts) == 0:
+        rename_session(session_id, auto_name_session(req.message))
+
+    # ---- Run Multi-Agent Pipeline ----
     try:
         pipeline_res = agent_harness.run_pipeline(
             user_info=user,
@@ -133,11 +229,15 @@ def handle_chat_query(req: ChatRequest):
             provider=req.api_provider or "gemini",
             error=err_str
         )
+        # Persist error response too
+        save_message(session_id=session_id, user_id=user["user_id"], role="assistant",
+                     content=f"⚠️ {err_str}")
         return ChatResponse(
             success=False,
             user_id=user["user_id"],
             user_name=user["full_name"],
             user_role=user["role"],
+            session_id=session_id,
             territory=user["territory_name"],
             region=user["region_name"],
             can_view_wac=bool(user["can_view_wac"]),
@@ -149,6 +249,8 @@ def handle_chat_query(req: ChatRequest):
         )
 
     q_data = pipeline_res.get("data")
+    explanation = pipeline_res.get("explanation", "")
+
     log_interaction(
         user_name=user["full_name"],
         user_role=user["role"],
@@ -160,17 +262,30 @@ def handle_chat_query(req: ChatRequest):
         error=pipeline_res.get("error")
     )
 
+    # Persist assistant response to session DB
+    save_message(
+        session_id=session_id,
+        user_id=user["user_id"],
+        role="assistant",
+        content=explanation,
+        sql_query=pipeline_res.get("sql"),
+        row_count=q_data.row_count if q_data else 0,
+        latency_ms=q_data.execution_time_ms if q_data else 0.0,
+        traces_json=json.dumps(pipeline_res.get("traces", []))
+    )
+
     return ChatResponse(
         success=pipeline_res.get("success", True),
         user_id=user["user_id"],
         user_name=user["full_name"],
         user_role=user["role"],
+        session_id=session_id,
         territory=user["territory_name"],
         region=user["region_name"],
         can_view_wac=bool(user["can_view_wac"]),
         question=req.message,
         sql=pipeline_res.get("sql"),
-        explanation=pipeline_res.get("explanation", ""),
+        explanation=explanation,
         data=q_data,
         chart=pipeline_res.get("chart"),
         suggestions=pipeline_res.get("suggestions", []),
@@ -180,6 +295,10 @@ def handle_chat_query(req: ChatRequest):
         error=pipeline_res.get("error")
     )
 
+
+# ====================================================================
+# RAG DIAGNOSTICS & LOGS
+# ====================================================================
 
 @app.get("/api/rag/domains")
 def get_rag_domains():
@@ -213,7 +332,9 @@ def clear_all_logs():
     return {"status": "logs cleared"}
 
 
-# Serve Static Frontend Files
+# ====================================================================
+# STATIC FRONTEND
+# ====================================================================
 if FRONTEND_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
 

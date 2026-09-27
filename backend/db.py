@@ -128,3 +128,149 @@ def get_all_users() -> List[Dict[str, Any]]:
     rows = cursor.fetchall()
     conn.close()
     return [dict(r) for r in rows]
+
+
+# ============================================================
+# SESSION STATE MANAGEMENT (Multi-User Persistent Conversations)
+# ============================================================
+
+def init_session_tables() -> None:
+    """Create persistent session and message tables if not already present."""
+    conn = get_db_connection()
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS chat_sessions (
+            session_id   TEXT PRIMARY KEY,
+            user_id      TEXT NOT NULL,
+            session_name TEXT NOT NULL DEFAULT 'New Chat',
+            created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS session_messages (
+            message_id   TEXT PRIMARY KEY,
+            session_id   TEXT NOT NULL,
+            user_id      TEXT NOT NULL,
+            role         TEXT NOT NULL CHECK(role IN ('user','assistant')),
+            content      TEXT NOT NULL,
+            sql_query    TEXT,
+            row_count    INTEGER DEFAULT 0,
+            latency_ms   REAL DEFAULT 0.0,
+            traces_json  TEXT DEFAULT '[]',
+            created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+            FOREIGN KEY (session_id) REFERENCES chat_sessions(session_id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON chat_sessions(user_id, updated_at);
+        CREATE INDEX IF NOT EXISTS idx_messages_session ON session_messages(session_id, created_at);
+    """)
+    conn.commit()
+    conn.close()
+
+
+def create_session(user_id: str, session_name: str = "New Chat") -> Dict[str, Any]:
+    """Create a new isolated chat session for a user and return its metadata."""
+    import uuid
+    session_id = f"sess_{uuid.uuid4().hex[:12]}"
+    conn = get_db_connection()
+    conn.execute(
+        "INSERT INTO chat_sessions (session_id, user_id, session_name) VALUES (?, ?, ?);",
+        (session_id, user_id, session_name)
+    )
+    conn.commit()
+    conn.close()
+    return {"session_id": session_id, "user_id": user_id, "session_name": session_name}
+
+
+def get_user_sessions(user_id: str) -> List[Dict[str, Any]]:
+    """Retrieve all chat sessions for a user, ordered newest-first."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT s.session_id, s.user_id, s.session_name, s.created_at, s.updated_at,
+               COUNT(m.message_id) as message_count
+        FROM chat_sessions s
+        LEFT JOIN session_messages m ON s.session_id = m.session_id
+        WHERE s.user_id = ?
+        GROUP BY s.session_id
+        ORDER BY s.updated_at DESC
+        LIMIT 50;
+    """, (user_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_session_history(session_id: str) -> List[Dict[str, Any]]:
+    """Load the full ordered message history of a session for context injection."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT message_id, session_id, user_id, role, content, sql_query,
+               row_count, latency_ms, traces_json, created_at
+        FROM session_messages
+        WHERE session_id = ?
+        ORDER BY created_at ASC;
+    """, (session_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def save_message(
+    session_id: str,
+    user_id: str,
+    role: str,
+    content: str,
+    sql_query: str = None,
+    row_count: int = 0,
+    latency_ms: float = 0.0,
+    traces_json: str = "[]"
+) -> str:
+    """Persist a user or assistant message to the session and touch the session timestamp."""
+    import uuid, json
+    message_id = f"msg_{uuid.uuid4().hex[:12]}"
+    conn = get_db_connection()
+    conn.execute(
+        """INSERT INTO session_messages
+           (message_id, session_id, user_id, role, content, sql_query, row_count, latency_ms, traces_json)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);""",
+        (message_id, session_id, user_id, role, content, sql_query, row_count, latency_ms, traces_json)
+    )
+    # Update session name on first user message and touch updated_at
+    conn.execute(
+        "UPDATE chat_sessions SET updated_at = datetime('now') WHERE session_id = ?;",
+        (session_id,)
+    )
+    conn.commit()
+    conn.close()
+    return message_id
+
+
+def rename_session(session_id: str, new_name: str) -> bool:
+    """Rename a chat session."""
+    conn = get_db_connection()
+    cursor = conn.execute(
+        "UPDATE chat_sessions SET session_name = ?, updated_at = datetime('now') WHERE session_id = ?;",
+        (new_name, session_id)
+    )
+    changed = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+    return changed
+
+
+def delete_session(session_id: str) -> bool:
+    """Delete a session and all its messages (cascade)."""
+    conn = get_db_connection()
+    cursor = conn.execute("DELETE FROM chat_sessions WHERE session_id = ?;", (session_id,))
+    changed = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+    return changed
+
+
+def auto_name_session(first_user_message: str) -> str:
+    """Generate a short session name from the user's first message (truncated to 40 chars)."""
+    name = first_user_message.strip()
+    return name[:40] + "…" if len(name) > 40 else name
+
