@@ -12,7 +12,9 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 
 BASE_DIR = Path(__file__).parent.parent
-DOCS_DIR = BASE_DIR / "nl2sql-assignment-main" / "nl2sql-assignment-main" / "docs"
+DOCS_DIR = BASE_DIR / "docs"
+if not DOCS_DIR.exists():
+    DOCS_DIR = BASE_DIR / "nl2sql-assignment-main" / "nl2sql-assignment-main" / "docs"
 
 # Domain Categorization for Segregated Knowledge Bases
 DOMAIN_CATEGORIES = {

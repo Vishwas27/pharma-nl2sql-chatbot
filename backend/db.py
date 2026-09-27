@@ -55,7 +55,9 @@ def init_database(force_reseed: bool = False) -> None:
             conn.executescript(create_tables_sql)
         else:
             from backend.domain_knowledge import SCHEMA_DDL
-            conn.executescript(SCHEMA_DDL)
+            # Use CREATE TABLE IF NOT EXISTS to prevent OperationalError on re-init
+            ddl_if_not_exists = SCHEMA_DDL.replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS ")
+            conn.executescript(ddl_if_not_exists)
         
         # Load seed data if available
         if seed_data_sql_path.exists():
