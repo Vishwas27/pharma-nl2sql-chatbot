@@ -5,6 +5,8 @@
 let state = {
     currentUser: null,
     users: [],
+    currentSessionId: null,
+    sessions: [],
     conversationHistory: [],
     schemaData: null,
     activeChartInstances: {},
@@ -188,6 +190,14 @@ function setupEventListeners() {
         resetConversation();
     });
 
+    // New Chat button
+    const btnNewChat = document.getElementById("btn-new-chat");
+    if (btnNewChat) {
+        btnNewChat.addEventListener("click", () => {
+            createNewChatSession();
+        });
+    }
+
     // Modals
     document.getElementById("btn-open-schema").addEventListener("click", () => openModal("schema-modal"));
     document.getElementById("btn-open-rules").addEventListener("click", () => {
@@ -307,7 +317,7 @@ function loginUser(user) {
     if (welcomeName) welcomeName.textContent = user.full_name;
 
     renderStarters(user.role);
-    resetConversation();
+    await loadUserSessions(user.user_id);
 
     // Transition Views cleanly
     const loginEl = document.getElementById("login-view");
@@ -319,7 +329,129 @@ function loginUser(user) {
 function signOut() {
     sessionStorage.removeItem("nova_active_user");
     state.currentUser = null;
+    state.currentSessionId = null;
+    state.sessions = [];
     showLoginView();
+}
+
+async function loadUserSessions(userId) {
+    try {
+        const resp = await fetch(`/api/sessions/${userId}`);
+        if (!resp.ok) return;
+        state.sessions = await resp.json();
+        renderSessionsList();
+        
+        if (state.sessions.length > 0) {
+            selectSession(state.sessions[0].session_id);
+        } else {
+            await createNewChatSession();
+        }
+    } catch (e) {
+        console.error("Error loading sessions:", e);
+    }
+}
+
+function renderSessionsList() {
+    const listEl = document.getElementById("sessions-list");
+    if (!listEl) return;
+
+    if (!state.sessions || state.sessions.length === 0) {
+        listEl.innerHTML = `<div class="session-empty-hint">No conversations yet. Ask your first question!</div>`;
+        return;
+    }
+
+    listEl.innerHTML = state.sessions.map(s => {
+        const isActive = s.session_id === state.currentSessionId;
+        return `
+            <div class="session-item ${isActive ? 'active' : ''}" data-session-id="${s.session_id}" onclick="selectSession('${s.session_id}')">
+                <div class="session-title-wrap">
+                    <span class="session-icon">💬</span>
+                    <span class="session-name" title="${escapeHtml(s.session_name)}">${escapeHtml(s.session_name)}</span>
+                </div>
+                <div class="session-actions" onclick="event.stopPropagation()">
+                    <button class="session-action-btn delete" title="Delete chat" onclick="deleteChatSession('${s.session_id}')">🗑️</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function createNewChatSession() {
+    if (!state.currentUser) return;
+    try {
+        const resp = await fetch(`/api/sessions?user_id=${encodeURIComponent(state.currentUser.user_id)}`, { method: "POST" });
+        if (resp.ok) {
+            const newSession = await resp.json();
+            state.sessions.unshift(newSession);
+            state.currentSessionId = newSession.session_id;
+            renderSessionsList();
+            resetConversation();
+        }
+    } catch (e) {
+        console.error("Error creating session:", e);
+    }
+}
+
+async function selectSession(sessionId) {
+    if (state.currentSessionId === sessionId && state.conversationHistory.length > 0) return;
+    state.currentSessionId = sessionId;
+    renderSessionsList();
+    resetConversation();
+
+    try {
+        const resp = await fetch(`/api/sessions/${sessionId}/history`);
+        if (!resp.ok) return;
+        const history = await resp.json();
+        
+        if (history && history.length > 0) {
+            history.forEach(msg => {
+                if (msg.role === "user") {
+                    appendUserMessage(msg.content);
+                    state.conversationHistory.push({ role: "user", content: msg.content });
+                } else {
+                    let parsedData = null;
+                    if (msg.data_json) {
+                        try { parsedData = JSON.parse(msg.data_json); } catch(e){}
+                    }
+                    let parsedChart = null;
+                    if (msg.chart_json) {
+                        try { parsedChart = JSON.parse(msg.chart_json); } catch(e){}
+                    }
+                    appendAssistantResponse({
+                        success: true,
+                        explanation: msg.content,
+                        sql: msg.sql,
+                        data: parsedData,
+                        chart: parsedChart || { chart_type: "none" },
+                        suggestions: [],
+                        rag_sources: [],
+                        traces: []
+                    });
+                    state.conversationHistory.push({ role: "assistant", content: msg.content, sql: msg.sql });
+                }
+            });
+        }
+    } catch (e) {
+        console.error("Error loading session history:", e);
+    }
+}
+
+async function deleteChatSession(sessionId) {
+    try {
+        await fetch(`/api/sessions/${sessionId}`, { method: "DELETE" });
+        state.sessions = state.sessions.filter(s => s.session_id !== sessionId);
+        if (state.currentSessionId === sessionId) {
+            if (state.sessions.length > 0) {
+                selectSession(state.sessions[0].session_id);
+            } else {
+                createNewChatSession();
+            }
+        } else {
+            renderSessionsList();
+        }
+    } catch (e) {
+        console.error("Error deleting session:", e);
+    }
 }
 
 function renderStarters(role) {
@@ -386,6 +518,7 @@ async function sendMessage(message) {
     try {
         const payload = {
             user_id: state.currentUser.user_id,
+            session_id: state.currentSessionId || undefined,
             message: message,
             conversation_history: state.conversationHistory,
             api_provider: state.settings.provider,
@@ -404,6 +537,22 @@ async function sendMessage(message) {
 
         const data = await resp.json();
         removeElement(thinkingId);
+
+        // If session was created or auto-named on server, sync session_id
+        if (data.session_id && data.session_id !== state.currentSessionId) {
+            state.currentSessionId = data.session_id;
+        }
+
+        // Refresh session titles
+        if (state.currentUser) {
+            fetch(`/api/sessions/${state.currentUser.user_id}`)
+                .then(r => r.json())
+                .then(sessions => {
+                    state.sessions = sessions;
+                    renderSessionsList();
+                })
+                .catch(() => {});
+        }
 
         // If error returned (e.g. No API key or server error)
         if (!data.success || data.error) {

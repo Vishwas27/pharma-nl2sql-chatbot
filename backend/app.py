@@ -143,6 +143,7 @@ def list_user_sessions(user_id: str):
 
 
 @app.get("/api/sessions/{session_id}/messages")
+@app.get("/api/sessions/{session_id}/history")
 def get_session_messages(session_id: str):
     """Load full message history of a session for restoring conversation UI."""
     messages = get_session_history(session_id)

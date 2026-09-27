@@ -282,15 +282,7 @@ class MultiAgentHarness:
                     peak_row = max(clean_rows, key=lambda r: (r.get(val_col, 0) or 0))
                     explanation = f"Here is the monthly volume trend across {len(clean_rows)} months. Total volume reached {total_vol:,.0f} pack units, peaking in {peak_row.get(label_col)} with {peak_row.get(val_col):,.0f} units."
                 elif len(clean_rows) == 1:
-                    # Check if market share or specific KPI
-                    if "market_share_pct" in first_row:
-                        ms_val = first_row.get("market_share_pct")
-                        brand_eq = first_row.get("brand_eq") or first_row.get("nova_eq") or first_row.get("novapharma_units") or 0
-                        mkt_eq = first_row.get("mkt_eq") or first_row.get("total_market_units") or 0
-                        drug = first_row.get("drug_name") or first_row.get(label_col) or "Leading Brand"
-                        explanation = f"**{drug}** recorded a market share of **{ms_val}%** ({brand_eq:,.0f} brand equivalents out of {mkt_eq:,.0f} total market volume equivalents)."
-                    else:
-                        explanation = f"**{first_row.get(label_col, 'Item')}** recorded **{first_row.get(val_col, 'N/A')}** across the selected period."
+                    explanation = f"Analysis result: {first_row.get(label_col, 'Item')} recorded {first_row.get(val_col, 'N/A')} across the selected period."
                 
             if chart_type == "none" and len(clean_rows) > 0 and len(clean_cols) >= 2:
                 chart_type = "line" if ("mo" in clean_cols[0].lower() or "date" in clean_cols[0].lower() or "period" in clean_cols[0].lower()) else ("bar" if len(clean_rows) <= 15 else "table")
