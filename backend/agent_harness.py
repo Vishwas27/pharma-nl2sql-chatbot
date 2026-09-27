@@ -272,15 +272,19 @@ class MultiAgentHarness:
             # If query returned data, produce an executive summary if the LLM explanation was generic
             if len(clean_rows) > 0 and len(clean_cols) >= 2:
                 first_row = clean_rows[0]
-                last_row = clean_rows[-1]
-                val_col = clean_cols[1]
                 label_col = clean_cols[0]
+                numeric_cols = [c for c in clean_cols if any(isinstance(r.get(c), (int, float)) for r in clean_rows)]
+                val_col = numeric_cols[0] if numeric_cols else clean_cols[1]
                 
                 # If monthly trend data, summarize start, end, and peak
-                if "mo" in label_col.lower() or "month" in label_col.lower() or "period" in label_col.lower():
-                    total_vol = sum(r.get(val_col, 0) or 0 for r in clean_rows)
-                    peak_row = max(clean_rows, key=lambda r: (r.get(val_col, 0) or 0))
-                    explanation = f"Here is the monthly volume trend across {len(clean_rows)} months. Total volume reached {total_vol:,.0f} pack units, peaking in {peak_row.get(label_col)} with {peak_row.get(val_col):,.0f} units."
+                if ("mo" in label_col.lower() or "month" in label_col.lower() or "period" in label_col.lower()) and numeric_cols:
+                    try:
+                        total_vol = sum(float(r.get(val_col, 0) or 0) for r in clean_rows if isinstance(r.get(val_col), (int, float)))
+                        peak_row = max(clean_rows, key=lambda r: (float(r.get(val_col, 0) or 0) if isinstance(r.get(val_col), (int, float)) else 0))
+                        peak_val = float(peak_row.get(val_col, 0) or 0)
+                        explanation = f"Here is the monthly volume trend across {len(clean_rows)} periods. Total volume reached {total_vol:,.0f} units, peaking in {peak_row.get(label_col)} with {peak_val:,.0f} units."
+                    except Exception:
+                        pass
                 elif len(clean_rows) == 1:
                     explanation = f"Analysis result: {first_row.get(label_col, 'Item')} recorded {first_row.get(val_col, 'N/A')} across the selected period."
                 
