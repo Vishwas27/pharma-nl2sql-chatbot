@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from backend.db import (
     init_database, execute_query, get_user_by_id_or_email, get_all_users,
     init_session_tables, create_session, get_user_sessions, get_session_history,
-    save_message, rename_session, delete_session, auto_name_session
+    save_message, rename_session, delete_session, clear_all_sessions, auto_name_session
 )
 from backend.models import ChatRequest, ChatResponse, QueryResult, ChartConfig, SessionInfo
 from backend.security import validate_and_sanitize_sql, filter_response_data
@@ -166,6 +166,13 @@ def delete_session_endpoint(session_id: str):
     if not ok:
         raise HTTPException(status_code=404, detail="Session not found.")
     return {"status": "deleted", "session_id": session_id}
+
+
+@app.post("/api/sessions/clear_all")
+def clear_all_sessions_endpoint(user_id: Optional[str] = None):
+    """Clear all chat sessions and messages across users or for a specific user."""
+    deleted = clear_all_sessions(user_id)
+    return {"status": "cleared", "sessions_deleted": deleted}
 
 
 # ====================================================================

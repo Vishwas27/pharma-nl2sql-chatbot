@@ -372,6 +372,20 @@ def delete_session(session_id: str) -> bool:
     return changed
 
 
+def clear_all_sessions(user_id: str = None) -> int:
+    """Clear all chat sessions and messages, optionally scoped to a user."""
+    conn = get_db_connection()
+    if user_id:
+        cursor = conn.execute("DELETE FROM chat_sessions WHERE user_id = ?;", (user_id,))
+    else:
+        conn.execute("DELETE FROM session_messages;")
+        cursor = conn.execute("DELETE FROM chat_sessions;")
+    deleted = cursor.rowcount
+    conn.commit()
+    conn.close()
+    return deleted
+
+
 def auto_name_session(first_user_message: str) -> str:
     """Generate a short session name from the user's first message (truncated to 40 chars)."""
     name = first_user_message.strip()
