@@ -116,7 +116,7 @@ function setupEventListeners() {
             card.classList.add("selected");
             const select = document.getElementById("login-user-select");
             if (select) select.value = userId;
-            
+
             // Auto login directly on card click for seamless UX
             const user = state.users.find(u => u.user_id === userId);
             if (user) {
@@ -205,7 +205,7 @@ function setupEventListeners() {
         switchTab("tab-metrics");
     });
     document.getElementById("btn-close-schema").addEventListener("click", () => closeModal("schema-modal"));
-    
+
     document.getElementById("btn-open-logs").addEventListener("click", () => {
         openModal("logs-modal");
         loadLogs();
@@ -277,7 +277,7 @@ function showLoginView() {
     if (mainEl) mainEl.style.setProperty("display", "none", "important");
 }
 
-function loginUser(user) {
+async function loginUser(user) {
     if (!user) return;
     state.currentUser = user;
     sessionStorage.setItem("nova_active_user", user.user_id);
@@ -340,7 +340,7 @@ async function loadUserSessions(userId) {
         if (!resp.ok) return;
         state.sessions = await resp.json();
         renderSessionsList();
-        
+
         if (state.sessions.length > 0) {
             selectSession(state.sessions[0].session_id);
         } else {
@@ -402,7 +402,7 @@ async function selectSession(sessionId) {
         const resp = await fetch(`/api/sessions/${sessionId}/history`);
         if (!resp.ok) return;
         const history = await resp.json();
-        
+
         if (history && history.length > 0) {
             history.forEach(msg => {
                 if (msg.role === "user") {
@@ -411,11 +411,11 @@ async function selectSession(sessionId) {
                 } else {
                     let parsedData = null;
                     if (msg.data_json) {
-                        try { parsedData = JSON.parse(msg.data_json); } catch(e){}
+                        try { parsedData = JSON.parse(msg.data_json); } catch (e) { }
                     }
                     let parsedChart = null;
                     if (msg.chart_json) {
-                        try { parsedChart = JSON.parse(msg.chart_json); } catch(e){}
+                        try { parsedChart = JSON.parse(msg.chart_json); } catch (e) { }
                     }
                     appendAssistantResponse({
                         success: true,
@@ -551,7 +551,7 @@ async function sendMessage(message) {
                     state.sessions = sessions;
                     renderSessionsList();
                 })
-                .catch(() => {});
+                .catch(() => { });
         }
 
         // If error returned (e.g. No API key or server error)
@@ -563,10 +563,10 @@ async function sendMessage(message) {
 
         // Update conversation history
         state.conversationHistory.push({ role: "user", content: message });
-        state.conversationHistory.push({ 
-            role: "assistant", 
-            content: data.explanation, 
-            sql: data.sql || null 
+        state.conversationHistory.push({
+            role: "assistant",
+            content: data.explanation,
+            sql: data.sql || null
         });
 
         appendAssistantResponse(data);
