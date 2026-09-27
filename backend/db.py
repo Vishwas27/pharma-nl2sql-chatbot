@@ -49,27 +49,30 @@ def init_database(force_reseed: bool = False) -> None:
         
     if not sales_table_exists or sales_count == 0 or force_reseed:
         print("[DB] Initializing schema and seeding database...")
-        if create_tables_sql_path.exists():
+        bundled_seed_dump = Path(__file__).parent / "seed_dump.sql"
+        if bundled_seed_dump.exists():
+            print("[DB] Loading bundled production dataset seed_dump.sql...")
+            with open(bundled_seed_dump, "r", encoding="utf-8") as f:
+                dump_sql = f.read()
+                safe_dump = dump_sql.replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS ")
+                safe_dump = safe_dump.replace("CREATE INDEX ", "CREATE INDEX IF NOT EXISTS ")
+                safe_dump = safe_dump.replace("CREATE UNIQUE INDEX ", "CREATE UNIQUE INDEX IF NOT EXISTS ")
+                safe_dump = safe_dump.replace("INSERT INTO ", "INSERT OR IGNORE INTO ")
+                conn.executescript(safe_dump)
+        elif create_tables_sql_path.exists():
             with open(create_tables_sql_path, "r", encoding="utf-8") as f:
                 create_tables_sql = f.read()
             conn.executescript(create_tables_sql)
+            if seed_data_sql_path.exists():
+                print("[DB] Loading seed_data.sql...")
+                with open(seed_data_sql_path, "r", encoding="utf-8") as f:
+                    seed_data_sql = f.read()
+                conn.executescript(seed_data_sql)
         else:
             from backend.domain_knowledge import SCHEMA_DDL
-            # Use CREATE TABLE IF NOT EXISTS to prevent OperationalError on re-init
             ddl_if_not_exists = SCHEMA_DDL.replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS ")
+            ddl_if_not_exists = ddl_if_not_exists.replace("CREATE INDEX ", "CREATE INDEX IF NOT EXISTS ")
             conn.executescript(ddl_if_not_exists)
-        
-        # Load seed data if available, or load bundled seed_dump.sql
-        bundled_seed_dump = Path(__file__).parent / "seed_dump.sql"
-        if seed_data_sql_path.exists():
-            print("[DB] Loading seed_data.sql...")
-            with open(seed_data_sql_path, "r", encoding="utf-8") as f:
-                seed_data_sql = f.read()
-            conn.executescript(seed_data_sql)
-        elif bundled_seed_dump.exists():
-            print("[DB] Loading bundled production dataset seed_dump.sql...")
-            with open(bundled_seed_dump, "r", encoding="utf-8") as f:
-                conn.executescript(f.read())
             
         # Check if users exist or re-seed valid user territory mapping
         cursor.execute("SELECT COUNT(*) FROM users;")
