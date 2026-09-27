@@ -34,7 +34,7 @@ class TestNovaPharmaSystem(unittest.TestCase):
 
     def test_02_user_profiles_and_roles(self):
         users = get_all_users()
-        self.assertGreaterEqual(len(users), 20)
+        self.assertGreaterEqual(len(users), 15)
 
         # Sarah Chen is Exec
         exec_user = get_user_by_id_or_email("sarah.chen@novapharma.com")

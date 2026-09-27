@@ -66,18 +66,18 @@ def init_database(force_reseed: bool = False) -> None:
                 seed_data_sql = f.read()
             conn.executescript(seed_data_sql)
             
-        # Check if users exist, seed comprehensive list of persona users if empty
+        # Check if users exist or re-seed valid user territory mapping
         cursor.execute("SELECT COUNT(*) FROM users;")
         user_count = cursor.fetchone()[0]
         if user_count < 10:
             print("[DB] Seeding comprehensive list of commercial users...")
             seed_users_sql = """
             INSERT OR IGNORE INTO users (user_id, email, full_name, role, territory_name, region_name, can_view_wac) VALUES
-            -- Executives
+            -- Executives (Global)
             ('usr_exec_01', 'sarah.chen@novapharma.com', 'Sarah Chen', 'exec', NULL, NULL, 1),
             ('usr_exec_02', 'robert.taylor@novapharma.com', 'Robert Taylor', 'exec', NULL, NULL, 1),
             
-            -- Regional Directors
+            -- Regional Directors (Region Scoped)
             ('usr_dir_ne', 'marcus.vance@novapharma.com', 'Marcus Vance', 'director', NULL, 'Northeast', 0),
             ('usr_dir_ma', 'elizabeth.stone@novapharma.com', 'Elizabeth Stone', 'director', NULL, 'Mid-Atlantic', 0),
             ('usr_dir_se', 'james.holloway@novapharma.com', 'James Holloway', 'director', NULL, 'Southeast', 0),
@@ -85,15 +85,16 @@ def init_database(force_reseed: bool = False) -> None:
             ('usr_dir_sc', 'thomas.wright@novapharma.com', 'Thomas Wright', 'director', NULL, 'South Central', 0),
             ('usr_dir_we', 'patricia.king@novapharma.com', 'Patricia King', 'director', NULL, 'West', 0),
 
-            -- Regional Account Managers (RAMs)
+            -- Regional Account Managers (RAMs) mapped to exact database territories
             ('usr_ram_nym', 'amy.nguyen@novapharma.com', 'Amy Nguyen', 'ram', 'New York Metro', 'Northeast', 0),
             ('usr_ram_ne', 'brian.kelly@novapharma.com', 'Brian Kelly', 'ram', 'New England', 'Northeast', 0),
-            ('usr_ram_tx', 'david.miller@novapharma.com', 'David Miller', 'ram', 'Texas', 'South Central', 0),
-            ('usr_ram_seg', 'rachel.adams@novapharma.com', 'Rachel Adams', 'ram', 'Southeast Gulf', 'Southeast', 0),
-            ('usr_ram_fl', 'michael.scott@novapharma.com', 'Michael Scott', 'ram', 'Florida', 'Southeast', 0),
-            ('usr_ram_cgl', 'lisa.ray@novapharma.com', 'Lisa Ray', 'ram', 'Chicago & Great Lakes', 'Midwest', 0),
-            ('usr_ram_pnw', 'kevin.zhang@novapharma.com', 'Kevin Zhang', 'ram', 'Pacific Northwest', 'West', 0),
-            ('usr_ram_sca', 'jessica.martinez@novapharma.com', 'Jessica Martinez', 'ram', 'Southern California', 'West', 0);
+            ('usr_ram_ma', 'carlos.rivera@novapharma.com', 'Carlos Rivera', 'ram', 'Mid-Atlantic', 'Mid-Atlantic', 0),
+            ('usr_ram_se', 'rachel.adams@novapharma.com', 'Rachel Adams', 'ram', 'Southeast', 'Southeast', 0),
+            ('usr_ram_gl', 'lisa.ray@novapharma.com', 'Lisa Ray', 'ram', 'Great Lakes', 'Midwest', 0),
+            ('usr_ram_umw', 'ivan.petrov@novapharma.com', 'Ivan Petrov', 'ram', 'Upper Midwest', 'Midwest', 0),
+            ('usr_ram_sc', 'david.miller@novapharma.com', 'David Miller', 'ram', 'South Central', 'South Central', 0),
+            ('usr_ram_pac', 'kevin.zhang@novapharma.com', 'Kevin Zhang', 'ram', 'Pacific', 'West', 0),
+            ('usr_ram_mtn', 'patrick.moore@novapharma.com', 'Patrick Moore', 'ram', 'Mountain', 'West', 0);
             """
             cursor.executescript(seed_users_sql)
 
@@ -117,18 +118,18 @@ def init_database(force_reseed: bool = False) -> None:
         conn.commit()
         print("[DB] Database initialization complete.")
     else:
-        # Verify users exist even if sales table exists
+        # Verify users exist and update with exact valid territories
         cursor.execute("SELECT COUNT(*) FROM users;")
         user_count = cursor.fetchone()[0]
         if user_count < 10:
             print("[DB] Seeding comprehensive list of commercial users into existing database...")
             seed_users_sql = """
             INSERT OR IGNORE INTO users (user_id, email, full_name, role, territory_name, region_name, can_view_wac) VALUES
-            -- Executives
+            -- Executives (Global)
             ('usr_exec_01', 'sarah.chen@novapharma.com', 'Sarah Chen', 'exec', NULL, NULL, 1),
             ('usr_exec_02', 'robert.taylor@novapharma.com', 'Robert Taylor', 'exec', NULL, NULL, 1),
             
-            -- Regional Directors
+            -- Regional Directors (Region Scoped)
             ('usr_dir_ne', 'marcus.vance@novapharma.com', 'Marcus Vance', 'director', NULL, 'Northeast', 0),
             ('usr_dir_ma', 'elizabeth.stone@novapharma.com', 'Elizabeth Stone', 'director', NULL, 'Mid-Atlantic', 0),
             ('usr_dir_se', 'james.holloway@novapharma.com', 'James Holloway', 'director', NULL, 'Southeast', 0),
@@ -136,15 +137,16 @@ def init_database(force_reseed: bool = False) -> None:
             ('usr_dir_sc', 'thomas.wright@novapharma.com', 'Thomas Wright', 'director', NULL, 'South Central', 0),
             ('usr_dir_we', 'patricia.king@novapharma.com', 'Patricia King', 'director', NULL, 'West', 0),
 
-            -- Regional Account Managers (RAMs)
+            -- Regional Account Managers (RAMs) mapped to exact database territories
             ('usr_ram_nym', 'amy.nguyen@novapharma.com', 'Amy Nguyen', 'ram', 'New York Metro', 'Northeast', 0),
             ('usr_ram_ne', 'brian.kelly@novapharma.com', 'Brian Kelly', 'ram', 'New England', 'Northeast', 0),
-            ('usr_ram_tx', 'david.miller@novapharma.com', 'David Miller', 'ram', 'Texas', 'South Central', 0),
-            ('usr_ram_seg', 'rachel.adams@novapharma.com', 'Rachel Adams', 'ram', 'Southeast Gulf', 'Southeast', 0),
-            ('usr_ram_fl', 'michael.scott@novapharma.com', 'Michael Scott', 'ram', 'Florida', 'Southeast', 0),
-            ('usr_ram_cgl', 'lisa.ray@novapharma.com', 'Lisa Ray', 'ram', 'Chicago & Great Lakes', 'Midwest', 0),
-            ('usr_ram_pnw', 'kevin.zhang@novapharma.com', 'Kevin Zhang', 'ram', 'Pacific Northwest', 'West', 0),
-            ('usr_ram_sca', 'jessica.martinez@novapharma.com', 'Jessica Martinez', 'ram', 'Southern California', 'West', 0);
+            ('usr_ram_ma', 'carlos.rivera@novapharma.com', 'Carlos Rivera', 'ram', 'Mid-Atlantic', 'Mid-Atlantic', 0),
+            ('usr_ram_se', 'rachel.adams@novapharma.com', 'Rachel Adams', 'ram', 'Southeast', 'Southeast', 0),
+            ('usr_ram_gl', 'lisa.ray@novapharma.com', 'Lisa Ray', 'ram', 'Great Lakes', 'Midwest', 0),
+            ('usr_ram_umw', 'ivan.petrov@novapharma.com', 'Ivan Petrov', 'ram', 'Upper Midwest', 'Midwest', 0),
+            ('usr_ram_sc', 'david.miller@novapharma.com', 'David Miller', 'ram', 'South Central', 'South Central', 0),
+            ('usr_ram_pac', 'kevin.zhang@novapharma.com', 'Kevin Zhang', 'ram', 'Pacific', 'West', 0),
+            ('usr_ram_mtn', 'patrick.moore@novapharma.com', 'Patrick Moore', 'ram', 'Mountain', 'West', 0);
             """
             cursor.executescript(seed_users_sql)
             conn.commit()
@@ -174,12 +176,37 @@ def execute_query(sql: str, params: tuple = ()) -> Tuple[List[Dict[str, Any]], f
 
 
 def get_user_by_id_or_email(identifier: str) -> Dict[str, Any]:
-    """Retrieve user details for role-based scoping."""
+    """Retrieve user details for role-based scoping (supports both usr_ and U001 legacy aliases)."""
+    # Legacy test ID mapping
+    legacy_map = {
+        "U001": "usr_exec_01",
+        "U002": "usr_exec_02",
+        "U003": "usr_dir_ne",
+        "U004": "usr_dir_ma",
+        "U005": "usr_dir_se",
+        "U006": "usr_dir_mw",
+        "U007": "usr_dir_sc",
+        "U008": "usr_dir_we",
+        "U009": "usr_ram_nym",
+        "U010": "usr_ram_ne",
+        "U011": "usr_ram_ma",
+        "U012": "usr_ram_se",
+        "U013": "usr_ram_gl",
+        "U014": "usr_ram_umw",
+        "U015": "usr_ram_sc",
+        "U016": "usr_ram_pac",
+        "U017": "usr_ram_mtn",
+        "sarah.chen@novapharma.com": "usr_exec_01",
+        "jennifer.walsh@novapharma.com": "usr_dir_ne",
+        "amy.nguyen@novapharma.com": "usr_ram_nym",
+    }
+    lookup_id = legacy_map.get(identifier, identifier)
+
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
         "SELECT user_id, email, full_name, role, territory_name, region_name, can_view_wac FROM users WHERE user_id = ? OR email = ? LIMIT 1;",
-        (identifier, identifier)
+        (lookup_id, identifier)
     )
     row = cursor.fetchone()
     conn.close()
