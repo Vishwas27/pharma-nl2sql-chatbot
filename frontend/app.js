@@ -292,6 +292,7 @@ function signOut() {
 
 function renderStarters(role) {
     const container = document.getElementById("starters-container");
+    if (!container) return;
     container.innerHTML = "";
     const list = STARTERS_BY_ROLE[role] || STARTERS_BY_ROLE.ram;
 
