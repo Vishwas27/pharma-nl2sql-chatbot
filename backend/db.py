@@ -319,6 +319,17 @@ def get_session_history(session_id: str) -> List[Dict[str, Any]]:
     return [dict(r) for r in rows]
 
 
+def ensure_session_exists(session_id: str, user_id: str) -> None:
+    """Ensure a session row exists in chat_sessions so foreign keys never fail."""
+    conn = get_db_connection()
+    conn.execute(
+        "INSERT OR IGNORE INTO chat_sessions (session_id, user_id, session_name) VALUES (?, ?, 'New Chat');",
+        (session_id, user_id)
+    )
+    conn.commit()
+    conn.close()
+
+
 def save_message(
     session_id: str,
     user_id: str,
@@ -331,6 +342,7 @@ def save_message(
 ) -> str:
     """Persist a user or assistant message to the session and touch the session timestamp."""
     import uuid, json
+    ensure_session_exists(session_id, user_id)
     message_id = f"msg_{uuid.uuid4().hex[:12]}"
     conn = get_db_connection()
     conn.execute(

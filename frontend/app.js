@@ -310,10 +310,14 @@ function setupEventListeners() {
         state.settings.provider = provider;
         state.settings.apiKey = apiKey;
         localStorage.setItem("nova_provider", provider);
-        localStorage.setItem("nova_api_key", apiKey);
+        if (apiKey) {
+            localStorage.setItem("nova_api_key", apiKey);
+        } else {
+            localStorage.removeItem("nova_api_key");
+        }
         closeModal("settings-modal");
         hideModelBanner();
-        showToast("AI Engine settings saved successfully!");
+        showToast(apiKey ? "Custom API Key saved!" : "Using server default AI model!");
     });
 
     // Modal tabs
@@ -326,8 +330,8 @@ function setupEventListeners() {
 }
 
 function openSettingsModal() {
-    document.getElementById("provider-select").value = state.settings.provider;
-    document.getElementById("api-key-input").value = state.settings.apiKey;
+    document.getElementById("provider-select").value = state.settings.provider || "gemini";
+    document.getElementById("api-key-input").value = state.settings.apiKey || "";
     openModal("settings-modal");
 }
 

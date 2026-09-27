@@ -487,11 +487,12 @@
                     </select>
                 </div>
                 <div class="form-group" id="api-key-group">
-                    <label for="api-key-input">API Key</label>
+                    <label for="api-key-input">Custom API Key (Optional)</label>
                     <input type="password" id="api-key-input" class="form-input"
-                        placeholder="Paste your API Key here...">
-                    <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 4px;">Leave blank to use the
-                        server environment default key.</small>
+                        placeholder="Using server default key (leave blank or enter custom key)...">
+                    <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 4px; display: block;">🔒
+                        Default server model is active. Enter a custom key only if you wish to override and use your own
+                        API quota.</small>
                 </div>
                 <button class="btn-primary" id="btn-save-settings">Save & Apply</button>
             </div>
