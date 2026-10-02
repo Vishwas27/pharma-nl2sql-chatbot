@@ -32,6 +32,23 @@ def get_db_connection() -> sqlite3.Connection:
 
 def init_database(force_reseed: bool = False) -> None:
     """Initialize database tables, indices, and load seed/generated data if not present."""
+    compressed_db_path = BASE_DIR / "pharma_full.db.gz"
+    full_db_path = BASE_DIR / "pharma_full.db"
+    
+    # If full pre-built compressed database is present and pharma.db is missing/reseeded
+    if compressed_db_path.exists() and (not DB_PATH.exists() or force_reseed):
+        print(f"[DB] Extracting full 2M-row database from {compressed_db_path.name}...")
+        import gzip, shutil
+        with gzip.open(compressed_db_path, "rb") as f_in, open(DB_PATH, "wb") as f_out:
+            shutil.copyfileobj(f_in, f_out)
+        print("[DB] Decompressed full 2,000,000-row database successfully!")
+        return
+    elif full_db_path.exists() and (not DB_PATH.exists() or force_reseed):
+        import shutil
+        shutil.copyfile(full_db_path, DB_PATH)
+        print("[DB] Initialized from pharma_full.db successfully!")
+        return
+
     create_tables_sql_path = SCHEMA_DIR / "create_tables.sql"
     seed_data_sql_path = SCHEMA_DIR / "seed_data.sql"
     
