@@ -21,9 +21,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend, frontend, and entrypoint
+# Copy application code, schemas, and domain docs
 COPY backend/ ./backend/
 COPY frontend/ ./frontend/
+COPY schema/ ./schema/
+COPY docs/ ./docs/
+COPY scripts/ ./scripts/
 COPY run.py .
 COPY DESIGN.md .
 
