@@ -9,7 +9,7 @@ import time
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
@@ -68,6 +68,12 @@ def health_check():
         }
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "unhealthy", "error": str(e)})
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    """Handle browser favicon request cleanly without 404 logs."""
+    return Response(status_code=204)
 
 
 # ====================================================================

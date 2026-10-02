@@ -7,7 +7,7 @@ import sqlite3
 import os
 import time
 from pathlib import Path
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 
 # Base paths
 BASE_DIR = Path(__file__).parent.parent
@@ -82,31 +82,52 @@ def init_database(force_reseed: bool = False) -> None:
         # Check if users exist or re-seed valid user territory mapping
         cursor.execute("SELECT COUNT(*) FROM users;")
         user_count = cursor.fetchone()[0]
-        if user_count < 10:
+        if user_count < 25:
             print("[DB] Seeding comprehensive list of commercial users...")
             seed_users_sql = """
             INSERT OR IGNORE INTO users (user_id, email, full_name, role, territory_name, region_name, can_view_wac) VALUES
-            -- Executives (Global)
-            ('usr_exec_01', 'sarah.chen@novapharma.com', 'Sarah Chen', 'exec', NULL, NULL, 1),
-            ('usr_exec_02', 'robert.taylor@novapharma.com', 'Robert Taylor', 'exec', NULL, NULL, 1),
-            
-            -- Regional Directors (Region Scoped)
-            ('usr_dir_ne', 'marcus.vance@novapharma.com', 'Marcus Vance', 'director', NULL, 'Northeast', 0),
-            ('usr_dir_ma', 'elizabeth.stone@novapharma.com', 'Elizabeth Stone', 'director', NULL, 'Mid-Atlantic', 0),
-            ('usr_dir_se', 'james.holloway@novapharma.com', 'James Holloway', 'director', NULL, 'Southeast', 0),
-            ('usr_dir_mw', 'karen.brooks@novapharma.com', 'Karen Brooks', 'director', NULL, 'Midwest', 0),
-            ('usr_dir_sc', 'thomas.wright@novapharma.com', 'Thomas Wright', 'director', NULL, 'South Central', 0),
-            ('usr_dir_we', 'patricia.king@novapharma.com', 'Patricia King', 'director', NULL, 'West', 0),
+            -- Standard IDs (U001 - U023)
+            ('U001', 'sarah.chen@novapharma.com', 'Sarah Chen', 'exec', NULL, NULL, 1),
+            ('U002', 'michael.torres@novapharma.com', 'Michael Torres', 'exec', NULL, NULL, 1),
+            ('U003', 'jennifer.walsh@novapharma.com', 'Jennifer Walsh', 'director', NULL, 'Northeast', 0),
+            ('U004', 'david.park@novapharma.com', 'David Park', 'director', NULL, 'Mid-Atlantic', 0),
+            ('U005', 'lisa.johnson@novapharma.com', 'Lisa Johnson', 'director', NULL, 'Southeast', 0),
+            ('U006', 'robert.kim@novapharma.com', 'Robert Kim', 'director', NULL, 'Midwest', 0),
+            ('U007', 'maria.garcia@novapharma.com', 'Maria Garcia', 'director', NULL, 'South Central', 0),
+            ('U008', 'james.anderson@novapharma.com', 'James Anderson', 'director', NULL, 'West', 0),
+            ('U009', 'amy.nguyen@novapharma.com', 'Amy Nguyen', 'ram', 'New York Metro', 'Northeast', 0),
+            ('U010', 'brian.murphy@novapharma.com', 'Brian Murphy', 'ram', 'New England', 'Northeast', 0),
+            ('U011', 'carlos.rivera@novapharma.com', 'Carlos Rivera', 'ram', 'Mid-Atlantic', 'Mid-Atlantic', 0),
+            ('U012', 'diana.wright@novapharma.com', 'Diana Wright', 'ram', 'Mid-Atlantic', 'Mid-Atlantic', 0),
+            ('U013', 'eric.thompson@novapharma.com', 'Eric Thompson', 'ram', 'Southeast', 'Southeast', 0),
+            ('U014', 'fiona.davis@novapharma.com', 'Fiona Davis', 'ram', 'Southeast', 'Southeast', 0),
+            ('U015', 'george.martinez@novapharma.com', 'George Martinez', 'ram', 'Great Lakes', 'Midwest', 0),
+            ('U016', 'hannah.lee@novapharma.com', 'Hannah Lee', 'ram', 'Great Lakes', 'Midwest', 0),
+            ('U017', 'ivan.petrov@novapharma.com', 'Ivan Petrov', 'ram', 'Upper Midwest', 'Midwest', 0),
+            ('U018', 'julia.robinson@novapharma.com', 'Julia Robinson', 'ram', 'South Central', 'South Central', 0),
+            ('U019', 'kevin.brown@novapharma.com', 'Kevin Brown', 'ram', 'South Central', 'South Central', 0),
+            ('U020', 'laura.wilson@novapharma.com', 'Laura Wilson', 'ram', 'Pacific', 'West', 0),
+            ('U021', 'nathan.clark@novapharma.com', 'Nathan Clark', 'ram', 'Pacific', 'West', 0),
+            ('U022', 'olivia.taylor@novapharma.com', 'Olivia Taylor', 'ram', 'Pacific', 'West', 0),
+            ('U023', 'patrick.moore@novapharma.com', 'Patrick Moore', 'ram', 'Mountain', 'West', 0),
 
-            -- Regional Account Managers (RAMs) mapped to exact database territories
+            -- Persona Aliases (usr_*)
+            ('usr_exec_01', 'sarah.chen@novapharma.com', 'Sarah Chen', 'exec', NULL, NULL, 1),
+            ('usr_exec_02', 'michael.torres@novapharma.com', 'Michael Torres', 'exec', NULL, NULL, 1),
+            ('usr_dir_ne', 'jennifer.walsh@novapharma.com', 'Jennifer Walsh', 'director', NULL, 'Northeast', 0),
+            ('usr_dir_ma', 'david.park@novapharma.com', 'David Park', 'director', NULL, 'Mid-Atlantic', 0),
+            ('usr_dir_se', 'lisa.johnson@novapharma.com', 'Lisa Johnson', 'director', NULL, 'Southeast', 0),
+            ('usr_dir_mw', 'robert.kim@novapharma.com', 'Robert Kim', 'director', NULL, 'Midwest', 0),
+            ('usr_dir_sc', 'maria.garcia@novapharma.com', 'Maria Garcia', 'director', NULL, 'South Central', 0),
+            ('usr_dir_we', 'james.anderson@novapharma.com', 'James Anderson', 'director', NULL, 'West', 0),
             ('usr_ram_nym', 'amy.nguyen@novapharma.com', 'Amy Nguyen', 'ram', 'New York Metro', 'Northeast', 0),
-            ('usr_ram_ne', 'brian.kelly@novapharma.com', 'Brian Kelly', 'ram', 'New England', 'Northeast', 0),
+            ('usr_ram_ne', 'brian.murphy@novapharma.com', 'Brian Murphy', 'ram', 'New England', 'Northeast', 0),
             ('usr_ram_ma', 'carlos.rivera@novapharma.com', 'Carlos Rivera', 'ram', 'Mid-Atlantic', 'Mid-Atlantic', 0),
-            ('usr_ram_se', 'rachel.adams@novapharma.com', 'Rachel Adams', 'ram', 'Southeast', 'Southeast', 0),
-            ('usr_ram_gl', 'lisa.ray@novapharma.com', 'Lisa Ray', 'ram', 'Great Lakes', 'Midwest', 0),
+            ('usr_ram_se', 'eric.thompson@novapharma.com', 'Eric Thompson', 'ram', 'Southeast', 'Southeast', 0),
+            ('usr_ram_gl', 'george.martinez@novapharma.com', 'George Martinez', 'ram', 'Great Lakes', 'Midwest', 0),
             ('usr_ram_umw', 'ivan.petrov@novapharma.com', 'Ivan Petrov', 'ram', 'Upper Midwest', 'Midwest', 0),
-            ('usr_ram_sc', 'david.miller@novapharma.com', 'David Miller', 'ram', 'South Central', 'South Central', 0),
-            ('usr_ram_pac', 'kevin.zhang@novapharma.com', 'Kevin Zhang', 'ram', 'Pacific', 'West', 0),
+            ('usr_ram_sc', 'kevin.brown@novapharma.com', 'Kevin Brown', 'ram', 'South Central', 'South Central', 0),
+            ('usr_ram_pac', 'laura.wilson@novapharma.com', 'Laura Wilson', 'ram', 'Pacific', 'West', 0),
             ('usr_ram_mtn', 'patrick.moore@novapharma.com', 'Patrick Moore', 'ram', 'Mountain', 'West', 0);
             """
             cursor.executescript(seed_users_sql)
@@ -134,31 +155,52 @@ def init_database(force_reseed: bool = False) -> None:
         # Verify users exist and update with exact valid territories
         cursor.execute("SELECT COUNT(*) FROM users;")
         user_count = cursor.fetchone()[0]
-        if user_count < 10:
+        if user_count < 25:
             print("[DB] Seeding comprehensive list of commercial users into existing database...")
             seed_users_sql = """
             INSERT OR IGNORE INTO users (user_id, email, full_name, role, territory_name, region_name, can_view_wac) VALUES
-            -- Executives (Global)
-            ('usr_exec_01', 'sarah.chen@novapharma.com', 'Sarah Chen', 'exec', NULL, NULL, 1),
-            ('usr_exec_02', 'robert.taylor@novapharma.com', 'Robert Taylor', 'exec', NULL, NULL, 1),
-            
-            -- Regional Directors (Region Scoped)
-            ('usr_dir_ne', 'marcus.vance@novapharma.com', 'Marcus Vance', 'director', NULL, 'Northeast', 0),
-            ('usr_dir_ma', 'elizabeth.stone@novapharma.com', 'Elizabeth Stone', 'director', NULL, 'Mid-Atlantic', 0),
-            ('usr_dir_se', 'james.holloway@novapharma.com', 'James Holloway', 'director', NULL, 'Southeast', 0),
-            ('usr_dir_mw', 'karen.brooks@novapharma.com', 'Karen Brooks', 'director', NULL, 'Midwest', 0),
-            ('usr_dir_sc', 'thomas.wright@novapharma.com', 'Thomas Wright', 'director', NULL, 'South Central', 0),
-            ('usr_dir_we', 'patricia.king@novapharma.com', 'Patricia King', 'director', NULL, 'West', 0),
+            -- Standard IDs (U001 - U023)
+            ('U001', 'sarah.chen@novapharma.com', 'Sarah Chen', 'exec', NULL, NULL, 1),
+            ('U002', 'michael.torres@novapharma.com', 'Michael Torres', 'exec', NULL, NULL, 1),
+            ('U003', 'jennifer.walsh@novapharma.com', 'Jennifer Walsh', 'director', NULL, 'Northeast', 0),
+            ('U004', 'david.park@novapharma.com', 'David Park', 'director', NULL, 'Mid-Atlantic', 0),
+            ('U005', 'lisa.johnson@novapharma.com', 'Lisa Johnson', 'director', NULL, 'Southeast', 0),
+            ('U006', 'robert.kim@novapharma.com', 'Robert Kim', 'director', NULL, 'Midwest', 0),
+            ('U007', 'maria.garcia@novapharma.com', 'Maria Garcia', 'director', NULL, 'South Central', 0),
+            ('U008', 'james.anderson@novapharma.com', 'James Anderson', 'director', NULL, 'West', 0),
+            ('U009', 'amy.nguyen@novapharma.com', 'Amy Nguyen', 'ram', 'New York Metro', 'Northeast', 0),
+            ('U010', 'brian.murphy@novapharma.com', 'Brian Murphy', 'ram', 'New England', 'Northeast', 0),
+            ('U011', 'carlos.rivera@novapharma.com', 'Carlos Rivera', 'ram', 'Mid-Atlantic', 'Mid-Atlantic', 0),
+            ('U012', 'diana.wright@novapharma.com', 'Diana Wright', 'ram', 'Mid-Atlantic', 'Mid-Atlantic', 0),
+            ('U013', 'eric.thompson@novapharma.com', 'Eric Thompson', 'ram', 'Southeast', 'Southeast', 0),
+            ('U014', 'fiona.davis@novapharma.com', 'Fiona Davis', 'ram', 'Southeast', 'Southeast', 0),
+            ('U015', 'george.martinez@novapharma.com', 'George Martinez', 'ram', 'Great Lakes', 'Midwest', 0),
+            ('U016', 'hannah.lee@novapharma.com', 'Hannah Lee', 'ram', 'Great Lakes', 'Midwest', 0),
+            ('U017', 'ivan.petrov@novapharma.com', 'Ivan Petrov', 'ram', 'Upper Midwest', 'Midwest', 0),
+            ('U018', 'julia.robinson@novapharma.com', 'Julia Robinson', 'ram', 'South Central', 'South Central', 0),
+            ('U019', 'kevin.brown@novapharma.com', 'Kevin Brown', 'ram', 'South Central', 'South Central', 0),
+            ('U020', 'laura.wilson@novapharma.com', 'Laura Wilson', 'ram', 'Pacific', 'West', 0),
+            ('U021', 'nathan.clark@novapharma.com', 'Nathan Clark', 'ram', 'Pacific', 'West', 0),
+            ('U022', 'olivia.taylor@novapharma.com', 'Olivia Taylor', 'ram', 'Pacific', 'West', 0),
+            ('U023', 'patrick.moore@novapharma.com', 'Patrick Moore', 'ram', 'Mountain', 'West', 0),
 
-            -- Regional Account Managers (RAMs) mapped to exact database territories
+            -- Persona Aliases (usr_*)
+            ('usr_exec_01', 'sarah.chen@novapharma.com', 'Sarah Chen', 'exec', NULL, NULL, 1),
+            ('usr_exec_02', 'michael.torres@novapharma.com', 'Michael Torres', 'exec', NULL, NULL, 1),
+            ('usr_dir_ne', 'jennifer.walsh@novapharma.com', 'Jennifer Walsh', 'director', NULL, 'Northeast', 0),
+            ('usr_dir_ma', 'david.park@novapharma.com', 'David Park', 'director', NULL, 'Mid-Atlantic', 0),
+            ('usr_dir_se', 'lisa.johnson@novapharma.com', 'Lisa Johnson', 'director', NULL, 'Southeast', 0),
+            ('usr_dir_mw', 'robert.kim@novapharma.com', 'Robert Kim', 'director', NULL, 'Midwest', 0),
+            ('usr_dir_sc', 'maria.garcia@novapharma.com', 'Maria Garcia', 'director', NULL, 'South Central', 0),
+            ('usr_dir_we', 'james.anderson@novapharma.com', 'James Anderson', 'director', NULL, 'West', 0),
             ('usr_ram_nym', 'amy.nguyen@novapharma.com', 'Amy Nguyen', 'ram', 'New York Metro', 'Northeast', 0),
-            ('usr_ram_ne', 'brian.kelly@novapharma.com', 'Brian Kelly', 'ram', 'New England', 'Northeast', 0),
+            ('usr_ram_ne', 'brian.murphy@novapharma.com', 'Brian Murphy', 'ram', 'New England', 'Northeast', 0),
             ('usr_ram_ma', 'carlos.rivera@novapharma.com', 'Carlos Rivera', 'ram', 'Mid-Atlantic', 'Mid-Atlantic', 0),
-            ('usr_ram_se', 'rachel.adams@novapharma.com', 'Rachel Adams', 'ram', 'Southeast', 'Southeast', 0),
-            ('usr_ram_gl', 'lisa.ray@novapharma.com', 'Lisa Ray', 'ram', 'Great Lakes', 'Midwest', 0),
+            ('usr_ram_se', 'eric.thompson@novapharma.com', 'Eric Thompson', 'ram', 'Southeast', 'Southeast', 0),
+            ('usr_ram_gl', 'george.martinez@novapharma.com', 'George Martinez', 'ram', 'Great Lakes', 'Midwest', 0),
             ('usr_ram_umw', 'ivan.petrov@novapharma.com', 'Ivan Petrov', 'ram', 'Upper Midwest', 'Midwest', 0),
-            ('usr_ram_sc', 'david.miller@novapharma.com', 'David Miller', 'ram', 'South Central', 'South Central', 0),
-            ('usr_ram_pac', 'kevin.zhang@novapharma.com', 'Kevin Zhang', 'ram', 'Pacific', 'West', 0),
+            ('usr_ram_sc', 'kevin.brown@novapharma.com', 'Kevin Brown', 'ram', 'South Central', 'South Central', 0),
+            ('usr_ram_pac', 'laura.wilson@novapharma.com', 'Laura Wilson', 'ram', 'Pacific', 'West', 0),
             ('usr_ram_mtn', 'patrick.moore@novapharma.com', 'Patrick Moore', 'ram', 'Mountain', 'West', 0);
             """
             cursor.executescript(seed_users_sql)
@@ -188,10 +230,26 @@ def execute_query(sql: str, params: tuple = ()) -> Tuple[List[Dict[str, Any]], f
         conn.close()
 
 
-def get_user_by_id_or_email(identifier: str) -> Dict[str, Any]:
-    """Retrieve user details for role-based scoping (supports both usr_ and U001 legacy aliases)."""
-    # Legacy test ID mapping
-    legacy_map = {
+def get_user_by_id_or_email(identifier: str) -> Optional[Dict[str, Any]]:
+    """Retrieve user details for role-based scoping (supports U001-U023, usr_ aliases, and emails)."""
+    if not identifier:
+        return None
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # 1. Direct match on user_id or email
+    cursor.execute(
+        "SELECT user_id, email, full_name, role, territory_name, region_name, can_view_wac FROM users WHERE user_id = ? OR LOWER(email) = LOWER(?) LIMIT 1;",
+        (identifier, identifier)
+    )
+    row = cursor.fetchone()
+    if row:
+        conn.close()
+        return dict(row)
+
+    # 2. Alias fallback mapping
+    alias_map = {
         "U001": "usr_exec_01",
         "U002": "usr_exec_02",
         "U003": "usr_dir_ne",
@@ -201,30 +259,28 @@ def get_user_by_id_or_email(identifier: str) -> Dict[str, Any]:
         "U007": "usr_dir_sc",
         "U008": "usr_dir_we",
         "U009": "usr_ram_nym",
-        "U010": "usr_ram_ne",
-        "U011": "usr_ram_ma",
-        "U012": "usr_ram_se",
-        "U013": "usr_ram_gl",
-        "U014": "usr_ram_umw",
-        "U015": "usr_ram_sc",
-        "U016": "usr_ram_pac",
-        "U017": "usr_ram_mtn",
-        "sarah.chen@novapharma.com": "usr_exec_01",
-        "jennifer.walsh@novapharma.com": "usr_dir_ne",
-        "amy.nguyen@novapharma.com": "usr_ram_nym",
+        "usr_exec_01": "U001",
+        "usr_exec_02": "U002",
+        "usr_dir_ne": "U003",
+        "usr_dir_ma": "U004",
+        "usr_dir_se": "U005",
+        "usr_dir_mw": "U006",
+        "usr_dir_sc": "U007",
+        "usr_dir_we": "U008",
+        "usr_ram_nym": "U009",
     }
-    lookup_id = legacy_map.get(identifier, identifier)
+    alt_id = alias_map.get(identifier)
+    if alt_id:
+        cursor.execute(
+            "SELECT user_id, email, full_name, role, territory_name, region_name, can_view_wac FROM users WHERE user_id = ? OR LOWER(email) = LOWER(?) LIMIT 1;",
+            (alt_id, alt_id)
+        )
+        row = cursor.fetchone()
+        if row:
+            conn.close()
+            return dict(row)
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT user_id, email, full_name, role, territory_name, region_name, can_view_wac FROM users WHERE user_id = ? OR email = ? LIMIT 1;",
-        (lookup_id, identifier)
-    )
-    row = cursor.fetchone()
     conn.close()
-    if row:
-        return dict(row)
     return None
 
 
