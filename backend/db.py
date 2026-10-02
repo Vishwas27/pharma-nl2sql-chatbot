@@ -76,21 +76,8 @@ def init_database(force_reseed: bool = False) -> None:
                 safe_seed = seed_sql.replace("INSERT INTO ", "INSERT OR IGNORE INTO ")
                 conn.executescript(safe_seed)
         else:
-            bundled_seed_dump = Path(__file__).parent / "seed_dump.sql"
-            if bundled_seed_dump.exists():
-                print("[DB] Loading bundled production dataset seed_dump.sql...")
-                with open(bundled_seed_dump, "r", encoding="utf-8") as f:
-                    dump_sql = f.read()
-                    safe_dump = dump_sql.replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS ")
-                    safe_dump = safe_dump.replace("CREATE INDEX ", "CREATE INDEX IF NOT EXISTS ")
-                    safe_dump = safe_dump.replace("CREATE UNIQUE INDEX ", "CREATE UNIQUE INDEX IF NOT EXISTS ")
-                    safe_dump = safe_dump.replace("INSERT INTO ", "INSERT OR IGNORE INTO ")
-                    conn.executescript(safe_dump)
-            else:
-                from backend.domain_knowledge import SCHEMA_DDL
-                ddl_if_not_exists = SCHEMA_DDL.replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS ")
-                ddl_if_not_exists = ddl_if_not_exists.replace("CREATE INDEX ", "CREATE INDEX IF NOT EXISTS ")
-                conn.executescript(ddl_if_not_exists)
+            from backend.domain_knowledge import SCHEMA_DDL
+            conn.executescript(SCHEMA_DDL)
             
         # Check if users exist or re-seed valid user territory mapping
         cursor.execute("SELECT COUNT(*) FROM users;")
