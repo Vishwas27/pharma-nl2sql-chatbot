@@ -203,7 +203,5 @@ def compress_database(db_path: Path, output_gz_path: Path):
 
 
 if __name__ == "__main__":
-    db_out = ROOT / "pharma_full.db"
-    gz_out = ROOT / "pharma_full.db.gz"
-    build_database(db_out)
-    compress_database(db_out, gz_out)
+    target = Path(sys.argv[1]) if len(sys.argv) > 1 else (ROOT / "pharma.db")
+    build_database(target)

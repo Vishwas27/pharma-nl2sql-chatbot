@@ -30,6 +30,9 @@ COPY scripts/ ./scripts/
 COPY run.py .
 COPY DESIGN.md .
 
+# Pre-build full 2,000,000-row database directly into the container image
+RUN python scripts/build_full_database.py
+
 # Expose server port
 EXPOSE 8000
 
